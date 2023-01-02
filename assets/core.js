@@ -4,7 +4,6 @@ import http from "http"; // for creating an HTTP server
 const get_img_url = item => `https://render.albiononline.com/v1/item/${item.UniqueName}.png`;
 // Connects to MongoDB and creates HTTP server
 async function main() {
-    console.log(process.env.MONGODB_USERNAME, process.env.MONGODB_PASSWORD);
     const client = await MongoClient.connect(
         `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.wgurxzm.mongodb.net/?retryWrites=true&w=majority`
     );
