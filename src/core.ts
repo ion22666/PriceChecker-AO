@@ -57,7 +57,7 @@ async function main(): Promise<void> {
                     }
                 });
         })
-        .listen(8000, process.env.DEV_STATE ? undefined : "0.0.0.0", () => {
+        .listen(3000, process.env.DEV_STATE ? undefined : "0.0.0.0", () => {
             let address = server.address();
             address = address === null ? "unknow" : address;
             console.log(
