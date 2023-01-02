@@ -57,7 +57,7 @@ async function main(): Promise<void> {
                     }
                 });
         })
-        .listen(8000, () => {
+        .listen(8000, process.env.DEV_STATE ? undefined : "ao-price-checker.onrender.com", () => {
             let address = server.address();
             address = address === null ? "unknow" : address;
             console.log(
