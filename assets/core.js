@@ -39,7 +39,7 @@ async function main() {
             }
         });
     })
-        .listen(8000, process.env.DEV_STATE ? undefined : "ao-price-checker.onrender.com", () => {
+        .listen(8000, process.env.DEV_STATE ? undefined : "0.0.0.0", () => {
         let address = server.address();
         address = address === null ? "unknow" : address;
         console.log(`Server is running on http://${typeof address == "string" ? address : (address.address === "::" ? "localhost" : address.address) + ":" + address.port.toString()}`);
