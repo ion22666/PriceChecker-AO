@@ -2,3 +2,6 @@ package-lock.json
 node_modules/
 .git/
 .env/
+.vscode/
+start.bat
+src\server\config.ts

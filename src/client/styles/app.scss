@@ -1,0 +1,18 @@
+body {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    cursor: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    .cursor {
+        height: 2.5vmin;
+        width: 2.5vmin;
+        position: absolute;
+        left: 0;
+        top: 0;
+        pointer-events: none;
+        /* transform: translate(0%, -100%); */
+    }
+}
