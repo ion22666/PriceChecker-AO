@@ -2,7 +2,8 @@ const fs = require("fs");
 const sass = require("sass");
 const validateCss = require("css-validator");
 const chalk = require("chalk");
-
+const { spawn } = require("child_process");
+var error_state = false;
 const files = [
     {
         input: "./src/client/styles/app1.scss",
@@ -20,21 +21,28 @@ const files = [
 const compile = file => {
     if (file.compiling) return;
     file.compiling = true;
-    let result = sass.compile(file.input);
-    validateCss({ text: result.css }, (err, data) => {
-        if (data.validity) {
-            console.log(chalk.green(file.input + " has compiled successfully"));
-            fs.writeFileSync(file.output, result.css);
-        } else {
-            console.log(chalk.bold.redBright("--------------Error in " + chalk.cyanBright(file.input) + "------------------"));
-            data.errors.forEach(error => {
-                console.log(chalk.bold.yellow("LINE: ") + error.line);
-                console.log(chalk.bold.magenta("ERRORTYPE: ") + error.errortype);
-                console.log(chalk.bold.bgHex("#010101")(chalk.bold("MESSAGE: ") + chalk.bold.yellowBright(error.message.trimStart())));
-            });
-        }
-    });
-    file.compiling = false;
+    try {
+        let result = sass.compile(file.input);
+        validateCss({ text: result.css }, (err, data) => {
+            if (error_state) return;
+            if (data.validity) {
+                console.log(chalk.greenBright.bgHex("#000")(chalk.cyanBright(file.input) + " has compiled successfully"));
+                fs.writeFileSync(file.output, result.css);
+            } else {
+                console.log(chalk.bold.redBright.bgHex("#000")("---------- Error in " + chalk.cyanBright(file.input) + " -------------"));
+                data.errors.forEach(error => {
+                    console.log(chalk.bold.yellow("LINE: ") + error.line);
+                    console.log(chalk.bold.magenta("ERRORTYPE: ") + error.errortype);
+                    console.log(chalk.bold.bgHex("#000")(chalk.bold("MESSAGE: ") + chalk.bold.yellowBright(error.message.trimStart())));
+                    console.log(chalk.bold.redBright.bgHex("#000")("-----------------------------------------------------------"));
+                });
+            }
+            file.compiling = false;
+        });
+    } catch (err) {
+        file.compiling = false;
+        console.log(chalk.bold.redBright.bgHex("#000")(err));
+    }
 };
 
 // Initial compilation

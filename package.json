@@ -7,7 +7,7 @@
         "tsc": "npx tsc --project tsconfig.json --watch",
         "web": "webpack --watch --progress",
         "server": "nodemon ./dist/server.cjs",
-        "sass": "npx sass ./src/client/styles/app.scss ./src/client/styles/app.css"
+        "sass": "node ./sass-compiler.cjs"
     },
     "author": "",
     "license": "ISC",
