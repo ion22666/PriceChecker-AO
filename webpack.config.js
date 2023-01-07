@@ -15,7 +15,7 @@ export default [
     {
         mode: mode,
         entry: {
-            client: "./src/client/core.tsx",
+            client: "./src/client/app.jsx",
         },
         output: {
             path: path.resolve(dirname, "./dist"),
@@ -23,22 +23,7 @@ export default [
         },
         module: {
             rules: [
-                // Use ts-loader to transpile TypeScript and JSX/React code
-                {
-                    test: /\.tsx?$/,
-                    use: "ts-loader",
-                    // use: [
-                    //     {
-                    //         loader: "file-loader",
-                    //         options: {
-                    //             outputPath: ".",
-                    //             name: "client/[name].jsx",
-                    //         },
-                    //     },
-                    //     "ts-loader",
-                    // ],
-                    exclude: /node_modules/,
-                },
+
                 // Use Babel to transpile the resulting JSX code
                 {
                     test: /\.jsx?$/,
@@ -48,29 +33,10 @@ export default [
             ],
         },
         resolve: {
-            extensions: [".ts", ".tsx", ".js", ".jsx"],
+            extensions: [".js", ".jsx"],
         },
     },
-    // SASS bundle
-    {
-        mode: mode,
-        entry: {
-            client: "./src/client/styles/app.scss",
-        },
-        output: {
-            path: path.resolve(dirname, "./dist/assets/styles"),
-            filename: "app.css",
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.scss$/,
-                    use: ["sass-loader"],
-                },
-            ],
-        },
-    },
-
+    
     // Server-side bundle
     {
         mode: mode,
