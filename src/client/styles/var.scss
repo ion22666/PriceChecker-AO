@@ -1,0 +1,52 @@
+:root {
+    --light: rgb(255, 255, 193);
+    --dark: rgb(74, 55, 69);
+}
+
+$light: var(--light);
+$dark: var(--dark);
+
+@mixin absolute-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+@mixin exces_text {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+@function MINMAX($values) {
+    @if not $values {
+        @return auto;
+    }
+    $output: null;
+    @each $value in $values {
+        $output: $output + minmax(0, $value);
+    }
+    @return $output;
+}
+@mixin scrollbar($color, $background-color) {
+    scrollbar-color: $color $background-color;
+    scrollbar-width: thin;
+    &::-webkit-scrollbar-track {
+        background-color: $background-color;
+    }
+
+    &::-webkit-scrollbar {
+        width: 8px;
+        background-color: transparent;
+        padding: 0;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: $color;
+    }
+    &::-webkit-scrollbar-track-piece {
+        display: none;
+    }
+    &::-webkit-scrollbar-corner {
+        display: none;
+    }
+}

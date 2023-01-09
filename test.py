@@ -1,24 +1,9 @@
-def verify_password(password): 
-    if parola == parola_corecta:
-        print("You're logged in!")
-        return True
-    elif len(parola) < 4 or len(parola) > 10:
-        print("Password needs to be in range 4-10")
-    else:
-        print("Wrong password")
-    return False
-    
-parola_corecta = "parola_corecta"
-tries = 3
+def find_indx(arr):
+    for i in range(len(arr)):
+        if sum(arr[:i+1])==sum(arr[i:]):
+            return i
+    return -1
 
-while tries > 0:
-    parola = input("Enter a password: ")
-    if verify_password(parola) == True:
-        print("You're logged in!")
-        break
-    else:
-        tries = tries-1
-        print("You have " + str(tries) + " tries")
-
-
-
+# print(find_indx([1,2,3,4,3,2,1] ))
+# print(find_indx([1,100,50,-51,1,1] ))
+# print(find_indx([20,10,-80,10,10,15,35] ))

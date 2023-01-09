@@ -1,10 +1,23 @@
-import { MongoClient, Collection, WithId } from "mongodb"; // Import various types and interfaces from the MongoDB driver
+import { Collection, MongoClient } from "mongodb";
 
-export const collections = (async (): Promise<{ items: Collection<ItemDocument> }> => {
-    const client = await MongoClient.connect(
-        `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.wgurxzm.mongodb.net/?retryWrites=true&w=majority`
-    );
-    return {
-        items: client.db("AO_Price_Checker").collection("items"),
-    };
-})();
+type collections = {
+    itemsArray: Collection<Document>;
+    itemsTree: Collection<Document>;
+};
+
+class DB {
+    private static _collections: collections;
+    static async connect() {
+        let client = await MongoClient.connect(
+            `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.wgurxzm.mongodb.net/?retryWrites=true&w=majority`
+        );
+        DB._collections = {
+            itemsArray: client.db("ao-items").collection("items"),
+            itemsTree: client.db("ao-items").collection("items1")
+        };
+    }
+    static get collections() {
+        return DB._collections;
+    }
+}
+export default DB;

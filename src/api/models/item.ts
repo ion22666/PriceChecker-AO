@@ -1,12 +1,12 @@
 import { ObjectId } from "mongodb";
 
-export function ExtendItem(document: ItemDocument | null): ItemType | null {
+export function ExtendItem(document: ItemLocalizedDocument | null): ItemLocalizedType | null {
     if (!document) {
         return null;
     } else {
-        (document as ItemType).get_img_url = (quality = 1): string => {
+        (document as ItemLocalizedType).get_img_url = (quality = 1): string => {
             return `https://render.albiononline.com/v1/item/${document.UniqueName}.png${quality !== null ? "?qulity=" + quality : void 0}`;
         };
-        return document as ItemType;
+        return document as ItemLocalizedType;
     }
 }

@@ -6,6 +6,11 @@ const { spawn } = require("child_process");
 var error_state = false;
 const files = [
     {
+        input: "./src/client/styles/app.scss",
+        output: "./dist/assets/styles/app.css",
+        compiling: false,
+    },
+    {
         input: "./src/client/styles/app1.scss",
         output: "./dist/assets/styles/app1.css",
         compiling: false,

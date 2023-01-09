@@ -2,6 +2,7 @@ import { MongoClient } from "mongodb"; // Import various types and interfaces fr
 export const collections = (async () => {
     const client = await MongoClient.connect(`mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.wgurxzm.mongodb.net/?retryWrites=true&w=majority`);
     return {
-        items: client.db("AO_Price_Checker").collection("items"),
+        items: client.db("ao-items").collection("items"),
+        items_localized: client.db("ao-items").collection("items-localized"),
     };
 })();

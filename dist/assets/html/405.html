@@ -1,0 +1,35 @@
+<style>
+    @font-face {
+        font-family: "CircularStd Black";
+        src: url(/fonts/CircularStd-Black.woff) format("woff");
+    }
+    body {
+        height: 100vh;
+        width: 100vw;
+        position: relative;
+        margin: 0;
+        border: 0;
+        padding: 0;
+        background-color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    div {
+        color: white;
+        font-size: 4rem;
+        width: fit-content;
+        font-family: "CircularStd Black";
+    }
+</style>
+<div></div>
+<script>
+    (async () => {
+        let div = document.querySelector("div");
+        let text = "405, method not allowed.";
+        for (let i = 0; i < text.length; i++) {
+            await new Promise((resolve, reject) => setTimeout(resolve, 66));
+            div.innerHTML += text[i];
+        }
+    })();
+</script>

@@ -11,19 +11,51 @@ const options = {
 };
 
 export default [
+    {
+        mode: "development",
+        entry: {
+            client: "./src/client/styles/app.scss",
+        },
+        output: {
+            path: path.resolve(dirname, "./dist/assets/styles"),
+            filename: "app.css.js",
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.s[ac]ss$/i,
+                    use: [
+                        {
+                            loader: "file-loader",
+                            options: {
+                                outputPath: ".",
+                                name: "app.css",
+                            },
+                        },
+                        "sass-loader",
+                    ],
+                },
+            ],
+        },
+    },
     // Client-side bundle
     {
         mode: mode,
         entry: {
-            client: "./src/client/app.jsx",
+            client: "./src/client/index.tsx",
         },
         output: {
-            path: path.resolve(dirname, "./dist"),
-            filename: "client.js",
+            path: path.resolve(dirname, "./dist/assets/scripts"),
+            filename: "app.js",
         },
         module: {
             rules: [
-
+                // Use ts-loader to transpile TypeScript and JSX/React code
+                {
+                    test: /\.tsx?$/,
+                    use: "ts-loader",
+                    exclude: /node_modules/,
+                },
                 // Use Babel to transpile the resulting JSX code
                 {
                     test: /\.jsx?$/,
@@ -33,15 +65,15 @@ export default [
             ],
         },
         resolve: {
-            extensions: [".js", ".jsx"],
+            extensions: [".js", ".jsx", ".ts", ".tsx"],
         },
     },
-    
+
     // Server-side bundle
     {
         mode: mode,
         entry: {
-            server: "./src/api/index.ts",
+            server: "./src/api/server.ts",
         },
         output: {
             path: path.resolve(dirname, "./dist"),

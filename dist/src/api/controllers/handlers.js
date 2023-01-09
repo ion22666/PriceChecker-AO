@@ -1,7 +1,8 @@
 import { collections } from "../config/mongodb";
+import { StaticDir } from "../config/paths";
 import { ExtendItem } from "../models/item";
 export const app = (req, res) => {
-    res.status(200).send("Hello");
+    res.status(200).sendFile(StaticDir + "html\\index.html");
 };
 export const api = {
     index: ((req, res) => {
