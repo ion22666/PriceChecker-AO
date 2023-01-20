@@ -7,7 +7,8 @@ export default {
     start: [
         ["", consoleLogging],
         ["", favicon],
-        ["", express.json()], // if a request has a body, try to parse it to JSON
+        ["", express.json()],
+        ["", express.urlencoded({ extended: true })], // if the request type is 
     ],
     end: [
         ["/", express.static("dist/assets")],

@@ -1,4 +1,5 @@
 export const available_category = [
+    "all",
     "melee",
     "magic",
     "ranged",
@@ -25,39 +26,14 @@ export const available_category = [
 ];
 
 export const available_sub_category: { [key: string]: string[] } = {
+    all: ["all"],
     melee: ["axe", "dagger", "hammer", "mace", "quarterstaff", "spear", "sword", "knuckles"],
     magic: ["arcanestaff", "cursestaff", "firestaff", "froststaff", "holystaff", "naturestaff"],
     ranged: ["bow", "crossbow"],
     offhand: ["book", "orb", "totem", "horn", "torch", "shield"],
-    armor: [
-        "cloth_helmet",
-        "leather_helmet",
-        "plate_helmet",
-        "unique_helmet",
-        "cloth_armor",
-        "leather_armor",
-        "plate_armor",
-        "unique_armor",
-        "cloth_shoes",
-        "leather_shoes",
-        "plate_shoes",
-        "unique_shoes",
-    ],
+    armor: ["cloth_helmet", "leather_helmet", "plate_helmet", "unique_helmet", "cloth_armor", "leather_armor", "plate_armor", "unique_armor", "cloth_shoes", "leather_shoes", "plate_shoes", "unique_shoes"],
     accessories: ["cape", "bag"],
-    mounts: [
-        "ridinghorse",
-        "armoredhorse",
-        "ox",
-        "mule",
-        "cougar",
-        "direwolf",
-        "direbear",
-        "direboar",
-        "swampdragon",
-        "giantstag",
-        "rare_mount",
-        "battle_mount",
-    ],
+    mounts: ["ridinghorse", "armoredhorse", "ox", "mule", "cougar", "direwolf", "direbear", "direboar", "swampdragon", "giantstag", "rare_mount", "battle_mount"],
     gatherergear: [
         "fibergatherer_helmet",
         "fishgatherer_helmet",
@@ -96,32 +72,11 @@ export const available_sub_category: { [key: string]: string[] } = {
     products: ["journal", "farming", "animals", "cooked"],
     luxurygoods: ["bridgewatch", "caerleon", "fortsterling", "lymhurst", "martlock", "thetford", "any"],
     trophies: ["fibertrophy", "fishtrophy", "generaltrophy", "hidetrophy", "mercenarytrophy", "oretrophy", "rocktrophy", "woodtrophy"],
-    furniture: [
-        "banner",
-        "bed",
-        "decoration_furniture",
-        "flag",
-        "heretic_furniture",
-        "keeper_furniture",
-        "morgana_furniture",
-        "repairkit",
-        "table",
-        "chest",
-        "unique",
-    ],
-    labourers: [
-        "woodcontract",
-        "stonecontract",
-        "fibercontract",
-        "hidecontract",
-        "orecontract",
-        "mercenarycontract",
-        "warriorcontract",
-        "magecontract",
-        "huntercontract",
-        "toolmakercontract",
-        "fishingcontract",
-    ],
+    furniture: ["banner", "bed", "decoration_furniture", "flag", "heretic_furniture", "keeper_furniture", "morgana_furniture", "repairkit", "table", "chest", "unique"],
+    labourers: ["woodcontract", "stonecontract", "fibercontract", "hidecontract", "orecontract", "mercenarycontract", "warriorcontract", "magecontract", "huntercontract", "toolmakercontract", "fishingcontract"],
     other: ["mission", "other", "trash"],
 };
 
+export const avalaible_sorts: string[] = ["Index", "@uniquename", "UniqueName", "@tier", "LocalizedNames"];
+
+export const avalaible_langs = ["EN-US", "DE-DE", "FR-FR", "RU-RU", "PL-PL", "ES-ES", "PT-BR", "IT-IT", "ZH-CN", "KO-KR", "JA-JP", "ZH-TW", "ID-ID"];

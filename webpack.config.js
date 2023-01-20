@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import nodeExternals from "webpack-node-externals";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-const mode = "production";
+const mode = "development";
 
 const options = {
     target: "node", // in order to ignore built-in modules like path, fs, etc.
@@ -11,6 +11,7 @@ const options = {
 };
 
 export default [
+    // CSS bundle
     {
         mode: "development",
         entry: {
@@ -43,10 +44,11 @@ export default [
         mode: mode,
         entry: {
             client: "./src/client/index.tsx",
+            test: "./src/client/index_test.tsx",
         },
         output: {
             path: path.resolve(dirname, "./dist/assets/scripts"),
-            filename: "app.js",
+            filename: "[name].js",
         },
         module: {
             rules: [
@@ -60,7 +62,7 @@ export default [
                 {
                     test: /\.jsx?$/,
                     use: "babel-loader",
-                    exclude: /node_modules/,
+                    exclude: /node_modules\/(?!(react|react-dom))/, ///mode === "development" ? /node_modules\/(?!(react|react-dom))/ : /node_modules/,
                 },
             ],
         },

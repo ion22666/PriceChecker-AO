@@ -1,11 +1,12 @@
 :root {
     --light: rgb(255, 255, 193);
-    --dark: rgb(74, 55, 69);
+    --dark: rgb(5, 44, 54);
+    --middle-color: #eac79f;
 }
 
 $light: var(--light);
 $dark: var(--dark);
-
+$middle-color: var(--middle-color);
 @mixin absolute-center {
     position: absolute;
     top: 50%;

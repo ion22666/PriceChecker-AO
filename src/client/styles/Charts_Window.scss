@@ -1,0 +1,21 @@
+@use "var" as *;
+#Charts_Window {
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+    #items_container {
+        > * {
+            font-size: 3vmin;
+        }
+    }
+    #wrapper {
+        height: 100%;
+        width: 80%;
+        flex: 1;
+        #myChart {
+        }
+    }
+}

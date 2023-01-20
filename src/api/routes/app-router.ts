@@ -1,5 +1,4 @@
 import express, { Handler } from "express";
-import { StaticDir } from "../config/paths";
 import appIndex from "../controllers/app-index";
 
 const appRouter = express.Router();

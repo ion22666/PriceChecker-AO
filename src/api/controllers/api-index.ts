@@ -6,9 +6,17 @@ import Return405 from "../middlewares/Return405";
 
 export default {
     get: (req, res) => {
-        res.status(200).json({ message: "Api Page" });
+        res.status(200).json({
+            message: "Albion Online Items API",
+            content: {
+                "Search Item": "/api/items/<unique_name || localized_name>",
+                Sources: [
+                    "https://raw.githubusercontent.com/broderickhyman/ao-bin-dumps/master/formatted/items.json",
+                    "https://raw.githubusercontent.com/broderickhyman/ao-bin-dumps/master/items.json",
+                ],
+            },
+        });
     },
-    all: Return405,
 } as {
-    [key: string]: Handler;
+    get: Handler;
 };
