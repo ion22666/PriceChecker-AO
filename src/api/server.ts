@@ -6,7 +6,7 @@ import DB from "./config/mongodb";
 (async (): Promise<void> => {
     await DB.connect();
     if (config.mode == "production") {
-        app.listen(() => {
+        app.listen(3000, () => {
             console.log("Server is running ...");
         });
     } else {
