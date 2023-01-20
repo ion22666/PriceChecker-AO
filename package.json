@@ -7,7 +7,7 @@
         "tsc": "tsc --project tsconfig.json --watch",
         "web": "webpack --watch --progress",
         "server": "nodemon ./dist/server.cjs",
-        "server-prod": "nodemon ./dist/server.cjs",
+        "server-prod": "node ./dist/server.cjs",
         "sass": "node ./sass-compiler.cjs"
     },
     "author": "",
