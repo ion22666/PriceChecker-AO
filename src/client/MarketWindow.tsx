@@ -83,8 +83,6 @@ export const Market_Window: FunctionComponent = () => {
     let [properties, SETproperties] = React.useState<SearchProperties>([...default_properties]);
     let [items, SET_items] = React.useState<Items[]>([]);
     let [is_loading, SET_is_loading] = React.useState<boolean>(true);
-    let [this_window, SET_this_window] = React.useState<boolean>(true);
-
     let fetch_items = async (): Promise<void> => {
         Locals.reset_scroll();
         SET_is_loading(true);
@@ -125,15 +123,18 @@ export const Market_Window: FunctionComponent = () => {
 
     React.useEffect(() => {
         fetch_items();
-    }, [properties]);
+    }, []);
+    let i = 1;
     return (
         <Window1Context.Provider value={[Locals, SET_Locals]}>
             <div id="market_window" className="window">
                 <div
                     id="go_to_charts"
-                    onClick={_ => {
-                        G.set_window(this_window ? 2 : 1);
-                        SET_this_window(v => !v);
+                    onClick={() => {
+                        SET_G(s => {
+                            s.active_window = s.active_window == 1 ? 2 : 1;
+                            return { ...s };
+                        });
                     }}
                 >
                     {">"}

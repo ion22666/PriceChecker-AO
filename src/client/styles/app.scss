@@ -63,15 +63,27 @@ body {
     main {
         width: 200vw !important;
         max-width: 200vw !important;
-        overflow: auto !important;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        transition: all 0.75s cubic-bezier(0.55, 0.085, 0.68, 0.53); /* easeInQuad */
-        transition-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); /* easeInQuad */
-        .window {
-            height: calc(100% - 4vmin);
-            width: calc(50% - 4vmin);
+        #the_real_root {
+            &.window1 {
+                transform: translateX(0%);
+            }
+            &.window2 {
+                transform: translateX(-50%);
+            }
+            width: 200vw !important;
+            max-width: 200vw !important;
+            height: 100%;
+            overflow: auto !important;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            transition: all 0.75s cubic-bezier(0.55, 0.085, 0.68, 0.53); /* easeInQuad */
+            transition-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); /* easeInQuad */
+
+            .window {
+                height: calc(100% - 4vmin);
+                width: calc(50% - 4vmin);
+            }
         }
     }
 }

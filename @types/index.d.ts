@@ -19,6 +19,19 @@ declare global {
         | "@showinmarketplace"
         | "@maxqualitylevel";
 
+    type MarketData = {
+        data: {
+            timestamps: string[];
+            prices_avg: number[];
+            item_count: number[];
+        };
+        location: string;
+        item_id: string;
+        quality: number;
+    };
+
+    type MarketDataResponse = MarketData[];
+
     type method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
     type ItemLocalizedType = ItemLocalizedDocument & {
@@ -48,7 +61,7 @@ declare global {
             "ZH-TW": string;
             "ID-ID": string;
         };
-        qulity: string;
+        quality: string;
     } | null;
 
     type SearchProperty = {

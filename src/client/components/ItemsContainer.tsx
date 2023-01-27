@@ -22,7 +22,6 @@ export const ItemsContainer: FunctionComponent<Arg> = (args: Arg) => {
         });
     }, []);
     React.useEffect(() => {
-        console.log(args.items[args.items.length - 1] == null);
         if (args.items[args.items.length - 1] == null) {
             SET_no_more_items(true);
         } else {
@@ -50,8 +49,7 @@ export const ItemsContainer: FunctionComponent<Arg> = (args: Arg) => {
                 ///////////////////////////////////////////////////// then
                 [
                     ...args.items.map((item, index) => {
-                        let qulity = args.properties.find(p => p.id == "quality")?.Value;
-                        qulity = qulity == "*" || !qulity ? "" : qulity;
+                        let quality = args.properties.find(p => p.id == "quality")!.Value;
                         if (item == null) {
                             return (
                                 <div key={index} className="item_row bottom_row" id="no_more_items">
@@ -65,9 +63,9 @@ export const ItemsContainer: FunctionComponent<Arg> = (args: Arg) => {
                                         <div className="image_container">
                                             <span className="loader"></span>
                                             <img
-                                                src={`https://render.albiononline.com/v1/item/${item.UniqueName}.png?quality=${qulity}`}
+                                                src={`https://render.albiononline.com/v1/item/${item.UniqueName}.png?quality=${quality}`}
                                                 onError={e => {
-                                                    e.currentTarget.src = `https://albiononline2d.ams3.cdn.digitaloceanspaces.com/thumbnails/orig/${qulity}`;
+                                                    e.currentTarget.src = `https://albiononline2d.ams3.cdn.digitaloceanspaces.com/thumbnails/orig/${quality}`;
                                                     e.currentTarget.onerror = null;
                                                 }}
                                             />
@@ -81,12 +79,12 @@ export const ItemsContainer: FunctionComponent<Arg> = (args: Arg) => {
                                         </div>
                                     </div>
                                     <button
-                                        onClick={_ => {
-                                            SET_G(g => {
-                                                g.items.unshift(item);
-                                                return { ...g };
+                                        onClick={() => {
+                                            SET_G(s => {
+                                                s.active_window = 2;
+                                                s.chart_items = [{ ...item, quality: quality }, ...s.chart_items];
+                                                return { ...s };
                                             });
-                                            setTimeout(G.set_window, 0, 2);
                                         }}
                                     >
                                         Check

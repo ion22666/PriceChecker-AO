@@ -1,21 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { C1 } from "./_components/c1";
 
 const root = createRoot(document.getElementById("root")!);
 
-const global = {
-    theme: "dark",
-};
-
-export const GlobalContextTest = React.createContext([null, () => null] as [any, StateChanger<any>]);
-
 const App: FunctionComponent = () => {
-    const [global, SET_global] = React.useState({ number: 0 });
+    const [input, SET_input] = React.useState<string>("");
+
+    useEffect(() => {
+        let timeout_id = setTimeout(() => {
+            console.log("Requesting for input=", input);
+        }, 1000);
+        return () => clearTimeout(timeout_id);
+    }, [input]);
+
     return (
-        <GlobalContextTest.Provider value={[global, SET_global]}>
-            <C1 />
-        </GlobalContextTest.Provider>
+        <input type="text" onChange={e => { SET_input(e.target.value); }} />
     );
 };
 

@@ -1,9 +1,13 @@
-var a = [
-    { a: 1, b: 2 },
-    { a: 3, b: 4 },
-    { a: 5, b: 6 },
-];
+var a = {
+    a: 0,
+    b: 2,
+    c: 3,
+};
 
-a.find(o => o.a == 1).a = -1;
-
-console.log(a);
+console.log(
+    Object.entries(a).map(a => {
+        let o = {};
+        o[a[0]] = a[1];
+        return o;
+    })
+);

@@ -35,7 +35,6 @@ const Property_Chooser_Component: FunctionComponent<Property_Component> = (props
                                         sub_category.HtmlValuesList = sub_categories.map(FirstLetterUpperCaser);
                                     }
                                     P.find(p => p.id == property.id)!.Value = value_at_index;
-                                    console.log(P.find(p => p.id == "quality")!.Value);
                                     return [...P];
                                 });
                                 props.fetch_items();
@@ -66,11 +65,8 @@ export const Items_Properties_Chooser_Menu: FunctionComponent<Arg> = (params: Ar
             }
             SET_clicked_property((e.target as HTMLDivElement).id);
         });
-    });
+    }, []);
 
-    React.useEffect(() => {
-        console.log(default_properties);
-    }, [params.properties]);
     return (
         <div id="Items_Properties_Chooser_Menu">
             {params.properties
@@ -85,6 +81,7 @@ export const Items_Properties_Chooser_Menu: FunctionComponent<Arg> = (params: Ar
                         P.map(p => (p.type == "visible" ? (p.Value = p.ValuesList![0]) : p));
                         return [...P];
                     });
+                    params.fetch_items();
                 }}
             >
                 <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">

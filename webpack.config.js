@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import nodeExternals from "webpack-node-externals";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
-const mode = "production";
+const mode = "development";
 
 const options = {
     target: "node", // in order to ignore built-in modules like path, fs, etc.

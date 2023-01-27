@@ -1,12 +1,15 @@
 @use "var" as *;
 #market_window {
     background: url("/img/wood-texture.jpg");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     display: flex;
     flex-flow: column;
     justify-items: center;
     justify-content: center;
     padding: 1vmin 3vmin 1vmin 3vmin;
-    box-sizing: border-box;
     border-radius: 2vmin;
     border: 1vmin solid rgba(1, 1, 1, 0.4);
     gap: 2vmin;
@@ -99,16 +102,18 @@
         background: #5e5c5c;
         background: linear-gradient(0deg, #33343b 0%, #6d6f82 100%);
         box-shadow: 0 0 1vmin 0.1vmin black;
-        border: 0.4vh outset;
+        border: 0.4vh #a3a3a3 outset;
         flex-wrap: wrap;
+        align-items: center;
         .Property_Chooser_Component {
             padding: 0 2vh;
             font-size: 3vh;
             border-radius: 1vh;
-            border: 0.4vh outset;
+            border: 0.4vh #a3a3a3 outset;
             background: #5e5c5c;
             background: linear-gradient(0deg, #ac9275 0%, #ffdfb2 100%);
             cursor: pointer;
+            height: fit-content;
             &:hover {
                 border-style: inset;
             }
@@ -285,7 +290,7 @@
                 @include exces_text;
             }
             button {
-                border: 0.6vmin black outset;
+                border: 0.6vmin #a3a3a3 outset;
                 background: linear-gradient(0deg, rgb(42, 42, 42) 0%, rgb(120, 120, 120) 100%);
                 border-radius: 1vmin;
                 font-size: 2.8vh;

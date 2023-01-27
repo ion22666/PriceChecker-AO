@@ -7,7 +7,21 @@ type Arg = {
 };
 
 export const SearchItem: FunctionComponent<Arg> = (params: Arg) => {
-    let last_search_change = React.useRef(0);
+    const [input, SET_input] = React.useState<string>("");
+
+    React.useEffect(() => {
+        let timeout_id = setTimeout(() => {
+            params.SETproperties(P => {
+                P.find(p => p.id == "count")!.Value = "10";
+                P.find(p => p.id == "page")!.Value = "0";
+                P.find(p => p.id == "search")!.Value = input;
+                return [...P];
+            });
+            params.fetch_items();
+        }, 500);
+        return () => clearTimeout(timeout_id);
+    }, [input]);
+
     return (
         <div id="SearchItem">
             <span id="title">
@@ -21,22 +35,9 @@ export const SearchItem: FunctionComponent<Arg> = (params: Arg) => {
                         type="text"
                         placeholder="Search"
                         onChange={e => {
-                            params.SETproperties(P => {
-                                P.find(p => p.id == "search")!.Value = e.target.value;
-                                return [...P];
-                            });
-                            let this_change_id = ++last_search_change.current;
-                            setTimeout(() => {
-                                if (last_search_change.current != this_change_id) return;
-                                params.SETproperties(P => {
-                                    P.find(p => p.id == "count")!.Value = "10";
-                                    P.find(p => p.id == "page")!.Value = "0";
-                                    return [...P];
-                                });
-                                params.fetch_items();
-                            }, 500);
+                            SET_input(e.target.value);
                         }}
-                        value={params.properties.find(p => p.id == "search")!.Value}
+                        value={input}
                     />
                     <svg
                         onClick={_ => {
