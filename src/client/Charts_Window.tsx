@@ -3,6 +3,7 @@ import { GlobalContext } from ".";
 import { Chart, registerables } from "chart.js";
 import type * as ChartTypes from "chart.js";
 import "chartjs-adapter-date-fns";
+import { DateFormater } from "./components/utils";
 
 // Make the "line" ctx type available
 Chart.register(...registerables);
@@ -31,21 +32,36 @@ const markets_locations: { [key: string]: { color: string; icon_url: string } } 
     ["Merlyns Rest"]: { color: "black", icon_url: "img/Merlyns Rest.png" },
     ["Morganas Rest"]: { color: "black", icon_url: "img/Morganas Rest.png" },
 
-    ["Brecilien Market"]: { color: "pink", icon_url: "img/Brecilien Market.png" }, //5003,1001,4000,5003,6
+    ["Brecilien Market"]: { color: "pink", icon_url: "img/Brecilien Market.png" }, //5003,1001,4000,4001,3007,2000,5003,6,0
 
-    ["Lymhurst Portal"]: { color: "green", icon_url: "img/portal.png" },
-    ["Fort Sterling Portal"]: { color: "black", icon_url: "img/portal.png" },
-    ["Thetford Portal"]: { color: "black", icon_url: "img/portal.png" },
-    ["Martlock Portal"]: { color: "black", icon_url: "img/portal.png" },
-    ["Bridgewatch Portal"]: { color: "black", icon_url: "img/portal.png" },
+    ["Lymhurst Portal"]: { color: "green", icon_url: "img/Portal_Lymhurst.png" },
+    ["Fort Sterling Portal"]: { color: "black", icon_url: "img/Portal_Fort_Sterling.png" },
+    ["Thetford Portal"]: { color: "black", icon_url: "img/Portal_Thetford.png" },
+    ["Martlock Portal"]: { color: "black", icon_url: "img/Portal_Martlock.png" },
+    ["Bridgewatch Portal"]: { color: "black", icon_url: "img/Portal_Bridgewatch.png" },
 };
 
 const chart_basic_config: ChartConfiguration = {
     data: { datasets: [] },
     type: "line",
     options: {
+        // Turn off animations and data parsing for performance
+        animation: false,
+        parsing: false,
+
+        interaction: {
+            mode: "nearest",
+            axis: "x",
+            intersect: false,
+        },
         scales: {
             x: {
+                ticks: {
+                    source: "auto",
+                    // Disabled rotation for performance
+                    maxRotation: 0,
+                    autoSkip: true,
+                },
                 title: {
                     display: true,
                     text: "aaaaaa",
@@ -60,16 +76,25 @@ const chart_basic_config: ChartConfiguration = {
                     },
                     // unit: "hour",
                 },
-                ticks: {
-                    source: "auto",
+
+                grid: {
+                    color: "rgba(255,255,255,0.2)",
                 },
             },
             y: {
                 beginAtZero: true,
+                grid: {
+                    color: "rgba(255,255,255,0.3)",
+                },
             },
         },
         plugins: {
+            decimation: {
+                enabled: false,
+                algorithm: "min-max",
+            },
             legend: {
+                display: true,
                 labels: {
                     usePointStyle: true,
                     pointStyle: "line",
@@ -92,9 +117,8 @@ const chart_dataset_basic_config: ChartDataset = {
     fill: false,
     tension: 0.2,
     hidden: false,
+    pointStyle: false,
 };
-
-const locations = "Caerleon,Martlock,Bridgewatch,Fort Sterling,Lymhurst,Thetford";
 
 const x_square_svg = (
     <svg id="x_square_svg" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
@@ -122,14 +146,14 @@ export const Charts_Window: FunctionComponent = () => {
     let ctx = React.useRef<Chart>();
 
     let [chart_datasets, SET_chart_datasets] = React.useState<ChartDataset[]>([]);
-
+    let [active_time, SET_active_time] = React.useState<string>("month");
     let forceReRenderDatasetsDiv = () => {
         SET_chart_datasets(datasets => [...datasets]);
     };
 
-    let update_chart_datasets = async (unique_name: string, quality: string) => {
-        // date -> day-month-year
-        let response = await fetch(`https://www.albion-online-data.com/api/v2/stats/charts/${unique_name}?qualities=${quality}&date=10-1-2022&end_date=12-1-2023&time-scale=24`);
+    let update_chart_datasets = async (item: Items = G.chart_items[0]!, start_date: Date = new Date(new Date().setMonth(new Date().getMonth() - 1)), end_date: Date = new Date(), time_scale: "6" | "12" | "24" = "24") => {
+        // date -> month-day-year
+        let response = await fetch(`https://www.albion-online-data.com/api/v2/stats/charts/${item!.UniqueName}?qualities=${item?.quality || "1"}&date=${DateFormater(start_date)}&end_date=${DateFormater(end_date)}&time-scale=${time_scale}`);
         let json: MarketDataResponse = await response.json();
 
         let new_datasets: ChartDataset[] = [];
@@ -176,7 +200,7 @@ export const Charts_Window: FunctionComponent = () => {
         if (G.chart_items.length === 0) return;
 
         let on_screen_item = G.chart_items[0]!;
-        update_chart_datasets(on_screen_item.UniqueName, on_screen_item.quality);
+        update_chart_datasets(on_screen_item);
     }, [G.chart_items]);
 
     return (
@@ -213,10 +237,45 @@ export const Charts_Window: FunctionComponent = () => {
                 </div>
             </div>
             <div id="wrapper2">
-                <div id="canvas_container">
+                <div id="canvas_container" className={chart_datasets.length === 0 ? "empty" : ""}>
                     <canvas ref={el => (canvasRef.current = el!)} id="myChart"></canvas>
                 </div>
-                <div id="time_handler_container"></div>
+                <div id="time_handler_container">
+                    <span id="last_context">{"Last: "}</span>
+
+                    {/* Time Choosers */}
+                    {[
+                        { id: "day", time: 86400000, display_value: "24 hours" },
+                        { id: "week", time: 604800000, display_value: "7 days" },
+                        { id: "month", time: 2592000000, display_value: "1 month" },
+                        { id: "year", time: 31536000000, display_value: "1 year" },
+                    ].map(({ id, time, display_value }) => {
+                        return (
+                            <div
+                                key={id}
+                                id="id"
+                                className={"time_choser " + (active_time == id ? "active" : "")}
+                                onClick={_ => {
+                                    SET_active_time(id);
+                                    update_chart_datasets(undefined, new Date(new Date().getTime() - time));
+                                }}
+                            >
+                                {display_value}
+                            </div>
+                        );
+                    })}
+
+                    <span id="custom_context">{"Custom: "}</span>
+
+                    <span id="start_date">
+                        {" Start: "}
+                        <input type="text" placeholder="dd-mm-yyyy" />
+                    </span>
+                    <span id="end_date">
+                        {"End: "}
+                        <input type="text" placeholder="dd-mm-yyyy" />
+                    </span>
+                </div>
             </div>
         </div>
     );

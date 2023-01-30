@@ -22,6 +22,7 @@
     border: 1vmin solid rgba(1, 1, 1, 0.4);
     backdrop-filter: brightness(0.5);
     overflow: auto;
+    padding: 2vh;
     #wrapper1 {
         display: flex;
         flex-direction: column;
@@ -44,6 +45,7 @@
                 flex-wrap: nowrap;
                 align-items: center;
                 gap: 0.5vh;
+                white-space: nowrap;
                 &.active {
                     color: white;
                     &:hover {
@@ -75,11 +77,57 @@
         display: flex;
         flex-direction: column;
         flex: 1;
+        height: 100%;
+        gap: 1vh;
         #canvas_container {
             flex: 1;
+            min-height: 60vh;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 2vh;
+            &.empty {
+                &:after {
+                    content: "No Data Found";
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    text-align: center;
+                    text-shadow: 0 0 1vmin red;
+                }
+            }
+        }
+        #time_handler_container {
+            height: 5vh;
             width: 100%;
-            height: 100%;
-            #myChart {
+            background-color: gold;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 2vh;
+            .time_choser {
+                padding: 0 0.5vh;
+                border-radius: 1vh;
+                border: 0.4vh #a3a3a3 outset;
+                background: linear-gradient(0deg, #ac9275 0%, #ffdfb2 100%);
+                cursor: pointer;
+                &:not(.active) {
+                    &:hover {
+                        border-style: inset;
+                    }
+                }
+                &.active {
+                    border-style: inset;
+                    background: linear-gradient(0deg, #cfbc55 0%, #f4bb6b 100%);
+                }
+            }
+            & * {
+                font-size: 2vh;
             }
         }
     }
