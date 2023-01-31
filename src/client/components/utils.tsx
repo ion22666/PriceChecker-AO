@@ -3,6 +3,8 @@ export const FirstLetterUpperCaser = (s: string): string =>
         .split(" ")
         .map(word => word.substring(0, 1).toUpperCase() + word.substring(1, word.length).toLowerCase())
         .join(" ");
+
+// takes a date and formats it like : mm-dd-yyyy
 export const DateFormater = (date: Date) =>
     date
         .toLocaleDateString("en-US", {
@@ -12,3 +14,20 @@ export const DateFormater = (date: Date) =>
         })
         .split("/")
         .join("-");
+
+type Props = { unique_name?: string; quality?: string; className?: string; id?: string; onClick?: React.MouseEventHandler<HTMLImageElement> | undefined };
+
+export const ImgElement: FunctionComponent<Props> = (props: Props) => {
+    return (
+        <img
+            id={props.id}
+            className={props.className}
+            onClick={props.onClick}
+            src={`https://render.albiononline.com/v1/item/${props.unique_name}.png?quality=${props.quality}`}
+            onError={e => {
+                e.currentTarget.src = "img/T1_TRASH.png";
+                e.currentTarget.onerror = null;
+            }}
+        />
+    );
+};

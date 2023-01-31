@@ -3,7 +3,7 @@ import { GlobalContext } from ".";
 import { Chart, registerables } from "chart.js";
 import type * as ChartTypes from "chart.js";
 import "chartjs-adapter-date-fns";
-import { DateFormater } from "./components/utils";
+import { DateFormater, ImgElement } from "./components/utils";
 
 // Make the "line" ctx type available
 Chart.register(...registerables);
@@ -18,15 +18,15 @@ type ChartDataset = ChartTypes.ChartDataset<chart_type, data_pair[]>;
 type ChartConfiguration = ChartTypes.ChartConfiguration<chart_type, data_pair[], string>;
 
 //
-const markets_locations: { [key: string]: { color: string; icon_url: string } } = {
+const markets_locations: { [key: string]: { color: string; icon_url: string; display?: boolean } } = {
     ["Black Market"]: { color: "gray", icon_url: "img/Flag_Caerleon.png" },
 
-    ["Caerleon"]: { color: "black", icon_url: "img/Flag_Caerleon.png" },
-    ["Lymhurst"]: { color: "green", icon_url: "img/Flag_Lymhurst.png" },
-    ["Fort Sterling"]: { color: "lightblue", icon_url: "img/Flag_Fort_Sterling.png" },
-    ["Thetford"]: { color: "purple", icon_url: "img/Flag_Thetford.png" },
-    ["Martlock"]: { color: "blue", icon_url: "img/Flag_Martlock.png" },
-    ["Bridgewatch"]: { color: "orange", icon_url: "img/Flag_Bridgewatch.png" },
+    ["Caerleon"]: { color: "black", icon_url: "img/Flag_Caerleon.png", display: true },
+    ["Lymhurst"]: { color: "green", icon_url: "img/Flag_Lymhurst.png", display: true },
+    ["Fort Sterling"]: { color: "lightblue", icon_url: "img/Flag_Fort_Sterling.png", display: true },
+    ["Thetford"]: { color: "purple", icon_url: "img/Flag_Thetford.png", display: true },
+    ["Martlock"]: { color: "blue", icon_url: "img/Flag_Martlock.png", display: true },
+    ["Bridgewatch"]: { color: "orange", icon_url: "img/Flag_Bridgewatch.png", display: true },
 
     ["Arthurs Rest"]: { color: "darkblue", icon_url: "img/Arthurs Rest.png" },
     ["Merlyns Rest"]: { color: "black", icon_url: "img/Merlyns Rest.png" },
@@ -45,6 +45,18 @@ const chart_basic_config: ChartConfiguration = {
     data: { datasets: [] },
     type: "line",
     options: {
+        elements: {
+            point: {
+                radius: 0,
+                hoverBorderWidth: 2,
+                hitRadius: 2,
+                borderColor: "red",
+                backgroundColor: "red",
+            },
+        },
+        // onHover: function (e, active_elements, chart) {
+        //     active_elements.forEach(ActiveElement => (ActiveElement.element.options.pointStyle = false));
+        // },
         // Turn off animations and data parsing for performance
         animation: false,
         parsing: false,
@@ -63,7 +75,7 @@ const chart_basic_config: ChartConfiguration = {
                     autoSkip: true,
                 },
                 title: {
-                    display: true,
+                    display: false,
                     text: "aaaaaa",
                 },
                 type: "time",
@@ -117,7 +129,7 @@ const chart_dataset_basic_config: ChartDataset = {
     fill: false,
     tension: 0.2,
     hidden: false,
-    pointStyle: false,
+    pointStyle: "rectRot",
 };
 
 const x_square_svg = (
@@ -137,6 +149,7 @@ const check_square_svg_fill = (
         <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm10.03 4.97a.75.75 0 0 1 .011 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z" />
     </svg>
 );
+let gobal_time_scale: "6" | "12" | "24" = "24";
 
 // --------------  Charts Window  Component ---------------
 export const Charts_Window: FunctionComponent = () => {
@@ -147,13 +160,25 @@ export const Charts_Window: FunctionComponent = () => {
 
     let [chart_datasets, SET_chart_datasets] = React.useState<ChartDataset[]>([]);
     let [active_time, SET_active_time] = React.useState<string>("month");
+    let [custom_time, SET_custom_time] = React.useState<{ start: string; end: string }>({ start: DateFormater(new Date(new Date().getTime() - 2592000000)), end: DateFormater(new Date()) });
     let forceReRenderDatasetsDiv = () => {
         SET_chart_datasets(datasets => [...datasets]);
     };
 
-    let update_chart_datasets = async (item: Items = G.chart_items[0]!, start_date: Date = new Date(new Date().setMonth(new Date().getMonth() - 1)), end_date: Date = new Date(), time_scale: "6" | "12" | "24" = "24") => {
+    let update_chart_datasets = async (item: Items = G.chart_items[0]!, start_date: string | Date = new Date(new Date().setMonth(new Date().getMonth() - 1)), end_date: string | Date = new Date(), time_scale: "6" | "12" | "24" = "24"): Promise<any> => {
         // date -> month-day-year
-        let response = await fetch(`https://www.albion-online-data.com/api/v2/stats/charts/${item!.UniqueName}?qualities=${item?.quality || "1"}&date=${DateFormater(start_date)}&end_date=${DateFormater(end_date)}&time-scale=${time_scale}`);
+        let response = await fetch(
+            `https://www.albion-online-data.com/api/v2/stats/charts/
+            ${item!.UniqueName}
+            ?qualities=${item?.quality || "1"}
+            &date=${typeof start_date === "string" ? start_date : DateFormater(start_date)}
+            &end_date=${typeof end_date === "string" ? end_date : DateFormater(end_date)}
+            &time-scale=${time_scale || gobal_time_scale}`.replace(/\s|\n/g, "")
+        );
+        if (!response.ok) {
+            if (response.status == 400) return (await response.json()).errors;
+            return response.statusText;
+        }
         let json: MarketDataResponse = await response.json();
 
         let new_datasets: ChartDataset[] = [];
@@ -169,6 +194,7 @@ export const Charts_Window: FunctionComponent = () => {
                         return record;
                     }),
                     borderColor: markets_locations[market.location].color || "red",
+                    hidden: json.length > 5 ? !markets_locations[market.location].display : false,
                 };
                 new_datasets.push(dataset);
                 return dataset;
@@ -180,6 +206,7 @@ export const Charts_Window: FunctionComponent = () => {
     };
 
     let toggle_chart_dataset = (dataset: ChartDataset): void => {
+        markets_locations[dataset.label!].display = dataset.hidden;
         dataset.hidden = !dataset.hidden;
         ctx.current!.update();
         forceReRenderDatasetsDiv();
@@ -196,41 +223,60 @@ export const Charts_Window: FunctionComponent = () => {
     }, []);
 
     // Hook the chart with the chart_items from thr global context
-    useEffect(() => {
+    React.useEffect(() => {
         if (G.chart_items.length === 0) return;
 
         let on_screen_item = G.chart_items[0]!;
         update_chart_datasets(on_screen_item);
     }, [G.chart_items]);
 
+    React.useEffect(() => {
+        console.log(custom_time);
+    }, [custom_time]);
     return (
         <div id="Charts_Window" className="window">
             <div id="wrapper1">
                 <div id="chart_items_container">
-                    {G.chart_items.map((item, index) => {
-                        return (
-                            <img
-                                key={index}
-                                src={`https://render.albiononline.com/v1/item/${item!.UniqueName}.png?quality=${0}`}
-                                alt={item!.UniqueName}
-                                onError={e => {
-                                    e.currentTarget.src = `https://albiononline2d.ams3.cdn.digitaloceanspaces.com/thumbnails/orig/${0}`;
-                                    e.currentTarget.onerror = null;
-                                }}
-                            />
-                        );
-                    })}
+                    {G.chart_items.length === 0 ? (
+                        <>
+                            <div id="main_item_name">No item selected</div>
+                            <ImgElement id="main_item_img" />
+                            <div id="history_items"></div>
+                        </>
+                    ) : (
+                        <>
+                            <div id="main_item_name">{G.chart_items[0]?.LocalizedNames["EN-US"] || G.chart_items[0]!.UniqueName}</div>
+                            <ImgElement id="main_item_img" unique_name={G.chart_items[0]!.UniqueName} quality={G.chart_items[0]!.quality} />
+                            <div id="history_items_container">
+                                {G.chart_items.slice(1, 6).map(item => {
+                                    return (
+                                        <ImgElement
+                                            key={item!.UniqueName}
+                                            className="history_items_img"
+                                            unique_name={item!.UniqueName}
+                                            quality={item!.quality}
+                                            onClick={_ => {
+                                                update_chart_datasets(item);
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <div id="handle_chart_datasets">
                     {Object.entries(markets_locations).map(([market_name, market_props]) => {
                         let dataset = chart_datasets.find(dataset => dataset.label == market_name);
                         return (
-                            <div className={`market_row ${dataset ? "active" : "disabled"}`} key={market_name} onClick={dataset ? () => toggle_chart_dataset(dataset!) : void 0}>
+                            <div className={`market_row ${dataset ? "active" + (dataset.hidden ? " hidden" : "") : "disabled"}`} key={market_name} onClick={dataset ? () => toggle_chart_dataset(dataset!) : void 0}>
                                 {/* svg icon */}
                                 {dataset ? (dataset.hidden ? check_square_svg : check_square_svg_fill) : x_square_svg}
-                                <img src={market_props.icon_url} alt="" />
-                                {market_name}
-                                <img src={market_props.icon_url} alt="" />
+                                <div style={{ display: "flex", justifyContent: "space-between", flex: "1", height: "100%" }}>
+                                    <img src={market_props.icon_url} alt="" />
+                                    {market_name}
+                                    <img src={market_props.icon_url} alt="" />
+                                </div>
                             </div>
                         );
                     })}
@@ -241,40 +287,80 @@ export const Charts_Window: FunctionComponent = () => {
                     <canvas ref={el => (canvasRef.current = el!)} id="myChart"></canvas>
                 </div>
                 <div id="time_handler_container">
-                    <span id="last_context">{"Last: "}</span>
+                    <div id="time_choser_container">
+                        <span id="last_context">{"Last: "}</span>
 
-                    {/* Time Choosers */}
-                    {[
-                        { id: "day", time: 86400000, display_value: "24 hours" },
-                        { id: "week", time: 604800000, display_value: "7 days" },
-                        { id: "month", time: 2592000000, display_value: "1 month" },
-                        { id: "year", time: 31536000000, display_value: "1 year" },
-                    ].map(({ id, time, display_value }) => {
-                        return (
-                            <div
-                                key={id}
-                                id="id"
-                                className={"time_choser " + (active_time == id ? "active" : "")}
-                                onClick={_ => {
-                                    SET_active_time(id);
-                                    update_chart_datasets(undefined, new Date(new Date().getTime() - time));
+                        {/* Time Choosers */}
+                        {[
+                            { id: "day", time: 86400000, display_value: "24 hours" },
+                            { id: "week", time: 604800000, display_value: "7 days" },
+                            { id: "month", time: 2592000000, display_value: "1 month" },
+                            { id: "year", time: 31536000000, display_value: "1 year" },
+                        ].map(({ id, time, display_value }) => {
+                            return (
+                                <div
+                                    key={id}
+                                    id="id"
+                                    className={"time_choser " + (active_time == id ? "active" : "")}
+                                    onClick={_ => {
+                                        SET_active_time(id);
+                                        SET_custom_time({ start: DateFormater(new Date(new Date().getTime() - time)), end: DateFormater(new Date()) });
+                                        update_chart_datasets(undefined, new Date(new Date().getTime() - time));
+                                    }}
+                                >
+                                    {display_value}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div id="custom_time_setter_container">
+                        <span id="start_date">
+                            {" Start: "}
+                            <input
+                                type="text"
+                                placeholder="mm-dd-yyyy"
+                                value={custom_time.start}
+                                onChange={e => {
+                                    SET_custom_time(v => {
+                                        v.start = e.target.value;
+                                        return { ...v };
+                                    });
                                 }}
-                            >
-                                {display_value}
-                            </div>
-                        );
-                    })}
+                            />
+                        </span>
+                        <span id="end_date">
+                            {"End: "}
+                            <input
+                                type="text"
+                                placeholder={DateFormater(new Date())}
+                                value={custom_time.end}
+                                onChange={e => {
+                                    SET_custom_time(v => {
+                                        v.end = e.target.value;
+                                        return { ...v };
+                                    });
+                                }}
+                            />
+                        </span>
 
-                    <span id="custom_context">{"Custom: "}</span>
-
-                    <span id="start_date">
-                        {" Start: "}
-                        <input type="text" placeholder="dd-mm-yyyy" />
-                    </span>
-                    <span id="end_date">
-                        {"End: "}
-                        <input type="text" placeholder="dd-mm-yyyy" />
-                    </span>
+                        <button
+                            id="submit_button"
+                            onClick={async () => {
+                                if (custom_time.start === "" || custom_time.end === "") {
+                                    alert("Start and End dates must not be empty");
+                                    return;
+                                }
+                                let errors = (await update_chart_datasets(undefined, custom_time.start, custom_time.end)) as Array<any>;
+                                if (errors.length > 0) {
+                                    alert(JSON.stringify(errors));
+                                }
+                                SET_active_time("custom");
+                            }}
+                        >
+                            Search
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

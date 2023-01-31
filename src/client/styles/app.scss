@@ -32,6 +32,9 @@
     @include scrollbar(black, white);
     box-sizing: border-box;
 }
+button {
+    cursor: pointer;
+}
 .screen {
     margin: 0;
     border: 0;
