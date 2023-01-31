@@ -362,8 +362,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  justify-items: center;
-  align-content: center;
   flex-wrap: wrap-reverse;
   border-radius: 2vmin;
   border: 1vmin solid rgba(1, 1, 1, 0.4);

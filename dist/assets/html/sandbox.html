@@ -33,72 +33,88 @@
         <object data="https://icons.getbootstrap.com/assets/icons/eye-slash.svg" type="image/svg+xml"></object>
 
         <main id="root" class="screen">
-            <canvas></canvas>
+            <canvas id="myChart"></canvas>
             <button>Hide</button>
         </main>
 
         <script>
-            let ctx = document.querySelector("canvas");
-            let dataset = {
-                data: [
-                    {
-                        x: "2021-11-05T00:00:00",
-                        y: 50,
-                    },
-                    {
-                        x: "2021-11-07 01:00:28",
-                        y: 60,
-                    },
-                    {
-                        x: "2021-11-07 09:00:28",
-                        y: 20,
-                    },
-                ],
-            };
-            let chart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    datasets: [dataset],
-                },
+            var ctx = document.getElementById("myChart").getContext("2d");
+            var data_pairs = [
+                { x: "1", y: 100, z: 20 },
+                { x: "2", y: 90, z: 15 },
+                { x: "3", y: 80, z: 10 },
+                { x: "4", y: 100, z: 20 },
+                { x: "5", y: 90, z: 15 },
+                { x: "6", y: 80, z: 10 },
+            ];
 
+            var myChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    datasets: [
+                        {
+                            type: "line",
+                            label: "Price",
+                            data: data_pairs,
+                            yAxisID: "y-axis-1",
+                            backgroundColor: "rgba(255, 99, 132, 0.2)",
+                            borderColor: "rgba(255, 99, 132, 0.2)",
+                        },
+                        {
+                            type: "bar",
+                            label: "Count",
+                            data: data_pairs,
+                            yAxisID: "y-axis-2",
+                            backgroundColor: "rgba(54, 162, 235, 0.2)",
+                            borderColor: "rgba(54, 162, 235, 0.2)",
+                        },
+                    ],
+                },
                 options: {
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: "aaaaaa",
-                            },
-                            type: "time",
-                            min: Date.parse("2021-11-01 00:00:00"),
-                            max: Date.parse("2021-11-09 00:00:00"),
-                            time: {
-                                displayFormats: {
-                                    day: "MMM d",
-                                    hour: "HH a",
+                        xAxes: [
+                            {
+                                type: "time",
+                                time: {
+                                    displayFormats: {
+                                        quarter: "MMM YYYY",
+                                    },
                                 },
-                                // unit: "hour",
                             },
-                            ticks: {
-                                source: "auto",
+                        ],
+                        yAxes: [
+                            {
+                                id: "y-axis-1",
+                                type: "linear",
+                                position: "left",
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "Price",
+                                },
                             },
-                        },
-                        y: {
-                            beginAtZero: true,
-                        },
+                            {
+                                id: "y-axis-2",
+                                type: "linear",
+                                position: "right",
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "Count",
+                                },
+                                ticks: {
+                                    beginAtZero: true,
+                                },
+                            },
+                        ],
                     },
-
-                    //  Responsive Config
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 16 / 9,
-                    onResize: (a, b, c) => {
-                        console.log(a, b, c);
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                usePointStyle: true,
-                                pointStyle: "line",
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItem, data) {
+                                var label = data.datasets[tooltipItem.datasetIndex].label || "";
+                                if (label) {
+                                    label += ": ";
+                                }
+                                label += `x: ${tooltipItem.xLabel}, y: ${tooltipItem.yLabel}, z: ${data_pairs[tooltipItem.index].z}`;
+                                return label;
                             },
                         },
                     },

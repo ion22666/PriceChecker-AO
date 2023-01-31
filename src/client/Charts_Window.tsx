@@ -9,7 +9,7 @@ import { DateFormater, ImgElement } from "./components/utils";
 Chart.register(...registerables);
 
 // the type of a coordinate-like price data // x=time & y=price
-type data_pair = { x: number; y: number };
+type data_pair = { x: number; y: number; z: number };
 
 type chart_type = "line";
 type ChartData = ChartTypes.ChartData<chart_type, data_pair[], string>;
@@ -112,6 +112,20 @@ const chart_basic_config: ChartConfiguration = {
                     pointStyle: "line",
                 },
             },
+            tooltip: {
+                itemSort: function (a, b) {
+                    return a.element.y - b.element.y;
+                },
+                usePointStyle: true,
+                // callbacks: {
+                //     label: function (context): string {
+                //         return `${context.dataset.label} avg_price:${(context.raw as data_pair).y} count:${(context.raw as data_pair).z}`;
+                //     },
+                //     // labelPointStyle: () => {
+                //     //     return { pointStyle: "rectRot", rotation: 0, hoverBorderWidth: 2, hitRadius: 2, backgroundColor: "white" };
+                //     // },
+                // },
+            },
         },
 
         //  Responsive Config
@@ -190,7 +204,7 @@ export const Charts_Window: FunctionComponent = () => {
 
                     label: market.location,
                     data: market.data.prices_avg.map((avg_price, i) => {
-                        let record: data_pair = { x: Date.parse(market.data.timestamps[i]), y: avg_price };
+                        let record: data_pair = { x: Date.parse(market.data.timestamps[i]), y: avg_price, z: market.data.item_count[i] };
                         return record;
                     }),
                     borderColor: markets_locations[market.location].color || "red",
