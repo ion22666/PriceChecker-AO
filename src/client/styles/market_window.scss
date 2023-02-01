@@ -106,7 +106,6 @@
         flex-wrap: wrap;
         align-items: center;
         .Property_Chooser_Component {
-            
             font-size: 3vh;
             padding: 0 2vh;
             border-radius: 1vh;
@@ -244,6 +243,12 @@
             overflow: hidden;
             align-items: center;
             justify-content: space-between;
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 1vh;
+            box-shadow: 0 0 1vh rgba(255, 255, 255, 0.05);
+            border-radius: 1vh;
+            margin-bottom: 1vh;
+            padding: 0 1vh;
             .image_container {
                 height: $size;
                 width: $size;

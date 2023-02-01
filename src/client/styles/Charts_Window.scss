@@ -172,6 +172,28 @@ $box-shadow1: 0 0 0.4vh black;
                 padding: 0 2vh;
                 gap: 2vh;
             }
+            #time_scale_choser_container {
+                span {
+                    color: white;
+                }
+                div {
+                    padding: 0 0.5vh;
+                    border-radius: 1vh;
+                    border: 0.4vh #a3a3a3 outset;
+                    background: linear-gradient(0deg, #ac9275 0%, #ffdfb2 100%);
+                    cursor: pointer;
+                    color: black;
+                    &:not(.active) {
+                        &:hover {
+                            border-style: inset;
+                        }
+                    }
+                    &.active {
+                        border-style: inset;
+                        background: linear-gradient(0deg, #cfbc55 0%, #f4bb6b 100%);
+                    }
+                }
+            }
             #time_choser_container {
                 flex: 1;
                 .time_choser {

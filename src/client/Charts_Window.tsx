@@ -3,7 +3,8 @@ import { GlobalContext } from ".";
 import { Chart, registerables } from "chart.js";
 import type * as ChartTypes from "chart.js";
 import "chartjs-adapter-date-fns";
-import { DateFormater, ImgElement } from "./components/utils";
+import { DateFormater, formatNumber, ImgElement } from "./components/utils";
+import { time } from "console";
 
 // Make the "line" ctx type available
 Chart.register(...registerables);
@@ -19,7 +20,7 @@ type ChartConfiguration = ChartTypes.ChartConfiguration<chart_type, data_pair[],
 
 //
 const markets_locations: { [key: string]: { color: string; icon_url: string; display?: boolean } } = {
-    ["Black Market"]: { color: "gray", icon_url: "img/Flag_Caerleon.png" },
+    // ["Black Market"]: { color: "gray", icon_url: "img/Flag_Caerleon.png" },
 
     ["Caerleon"]: { color: "black", icon_url: "img/Flag_Caerleon.png", display: true },
     ["Lymhurst"]: { color: "green", icon_url: "img/Flag_Lymhurst.png", display: true },
@@ -32,7 +33,7 @@ const markets_locations: { [key: string]: { color: string; icon_url: string; dis
     ["Merlyns Rest"]: { color: "black", icon_url: "img/Merlyns Rest.png" },
     ["Morganas Rest"]: { color: "black", icon_url: "img/Morganas Rest.png" },
 
-    ["Brecilien Market"]: { color: "pink", icon_url: "img/Brecilien Market.png" }, //5003,1001,4000,4001,3007,2000,5003,6,0
+    // ["Brecilien Market"]: { color: "pink", icon_url: "img/Brecilien Market.png" }, //5003,1001,4000,4001,3007,2000,5003,6,0
 
     ["Lymhurst Portal"]: { color: "green", icon_url: "img/Portal_Lymhurst.png" },
     ["Fort Sterling Portal"]: { color: "black", icon_url: "img/Portal_Fort_Sterling.png" },
@@ -47,11 +48,14 @@ const chart_basic_config: ChartConfiguration = {
     options: {
         elements: {
             point: {
-                radius: 0,
-                hoverBorderWidth: 2,
-                hitRadius: 2,
-                borderColor: "red",
-                backgroundColor: "red",
+                // normal
+                radius: 4,
+                borderWidth: 2,
+                backgroundColor: "white",
+                // on hover
+                hoverRadius: 6,
+                hoverBorderWidth: 3,
+                hoverBackgroundColor: "red",
             },
         },
         // onHover: function (e, active_elements, chart) {
@@ -117,14 +121,14 @@ const chart_basic_config: ChartConfiguration = {
                     return a.element.y - b.element.y;
                 },
                 usePointStyle: true,
-                // callbacks: {
-                //     label: function (context): string {
-                //         return `${context.dataset.label} avg_price:${(context.raw as data_pair).y} count:${(context.raw as data_pair).z}`;
-                //     },
-                //     // labelPointStyle: () => {
-                //     //     return { pointStyle: "rectRot", rotation: 0, hoverBorderWidth: 2, hitRadius: 2, backgroundColor: "white" };
-                //     // },
-                // },
+                callbacks: {
+                    afterLabel: function (context): string {
+                        return `items count: ${(context.raw as data_pair).z}`;
+                    },
+                    // labelPointStyle: () => {
+                    //     return { pointStyle: "rectRot", rotation: 0, hoverBorderWidth: 2, hitRadius: 2, backgroundColor: "white" };
+                    // },
+                },
             },
         },
 
@@ -163,7 +167,6 @@ const check_square_svg_fill = (
         <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm10.03 4.97a.75.75 0 0 1 .011 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.75.75 0 0 1 1.08-.022z" />
     </svg>
 );
-let gobal_time_scale: "6" | "12" | "24" = "24";
 
 // --------------  Charts Window  Component ---------------
 export const Charts_Window: FunctionComponent = () => {
@@ -175,11 +178,18 @@ export const Charts_Window: FunctionComponent = () => {
     let [chart_datasets, SET_chart_datasets] = React.useState<ChartDataset[]>([]);
     let [active_time, SET_active_time] = React.useState<string>("month");
     let [custom_time, SET_custom_time] = React.useState<{ start: string; end: string }>({ start: DateFormater(new Date(new Date().getTime() - 2592000000)), end: DateFormater(new Date()) });
+    let [chart_time_scale, SET_chart_time_scale] = React.useState<"6" | "24">("24");
+
     let forceReRenderDatasetsDiv = () => {
         SET_chart_datasets(datasets => [...datasets]);
     };
 
-    let update_chart_datasets = async (item: Items = G.chart_items[0]!, start_date: string | Date = new Date(new Date().setMonth(new Date().getMonth() - 1)), end_date: string | Date = new Date(), time_scale: "6" | "12" | "24" = "24"): Promise<any> => {
+    let update_chart_datasets = async (
+        item: Items = G.chart_items[0]!,
+        start_date: string | Date = new Date(new Date().setMonth(new Date().getMonth() - 1)),
+        end_date: string | Date = new Date(),
+        time_scale: "6" | "12" | "24" = chart_time_scale
+    ): Promise<any> => {
         // date -> month-day-year
         let response = await fetch(
             `https://www.albion-online-data.com/api/v2/stats/charts/
@@ -187,7 +197,7 @@ export const Charts_Window: FunctionComponent = () => {
             ?qualities=${item?.quality || "1"}
             &date=${typeof start_date === "string" ? start_date : DateFormater(start_date)}
             &end_date=${typeof end_date === "string" ? end_date : DateFormater(end_date)}
-            &time-scale=${time_scale || gobal_time_scale}`.replace(/\s|\n/g, "")
+            &time-scale=${time_scale}`.replace(/\s|\n/g, "")
         );
         if (!response.ok) {
             if (response.status == 400) return (await response.json()).errors;
@@ -198,7 +208,7 @@ export const Charts_Window: FunctionComponent = () => {
         let new_datasets: ChartDataset[] = [];
 
         if (json.length) {
-            json.map(market => {
+            json.filter(market => markets_locations[market.location]).map(market => {
                 let dataset: ChartDataset = {
                     ...chart_dataset_basic_config,
 
@@ -214,6 +224,10 @@ export const Charts_Window: FunctionComponent = () => {
                 return dataset;
             });
         }
+
+        // ctx!.current!.options!.scales!.x!.min! = typeof start_date === "string" ? new Date(start_date).getTime() : start_date.getTime();
+        // ctx!.current!.options!.scales!.x!.max! = typeof end_date === "string" ? new Date(end_date).getTime() : end_date.getTime();
+
         ctx.current!.data.datasets = new_datasets;
         SET_chart_datasets(new_datasets);
         ctx.current!.update();
@@ -225,6 +239,11 @@ export const Charts_Window: FunctionComponent = () => {
         ctx.current!.update();
         forceReRenderDatasetsDiv();
     };
+
+    let set_chart_time_scale = React.useCallback((scale: "6" | "24") => {
+        SET_chart_time_scale(scale);
+        update_chart_datasets(undefined, undefined, undefined, scale);
+    }, []);
 
     // Declare the ctx hook only once
     React.useEffect(() => {
@@ -301,6 +320,15 @@ export const Charts_Window: FunctionComponent = () => {
                     <canvas ref={el => (canvasRef.current = el!)} id="myChart"></canvas>
                 </div>
                 <div id="time_handler_container">
+                    <div id="time_scale_choser_container">
+                        <span>Time Scale:</span>
+                        <div className={"time_choser " + (chart_time_scale == "6" ? "active" : "")} onClick={() => set_chart_time_scale("6")}>
+                            6
+                        </div>
+                        <div className={"time_choser " + (chart_time_scale == "24" ? "active" : "")} onClick={() => set_chart_time_scale("24")}>
+                            24
+                        </div>
+                    </div>
                     <div id="time_choser_container">
                         <span id="last_context">{"Last: "}</span>
 

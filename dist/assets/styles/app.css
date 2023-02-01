@@ -263,6 +263,12 @@
   overflow: hidden;
   align-items: center;
   justify-content: space-between;
+  background-color: rgba(255, 255, 255, 0.05);
+  margin-bottom: 1vh;
+  box-shadow: 0 0 1vh rgba(255, 255, 255, 0.05);
+  border-radius: 1vh;
+  margin-bottom: 1vh;
+  padding: 0 1vh;
 }
 #market_window #ItemsContainer .item_row .image_container {
   height: 10vh;
@@ -516,6 +522,24 @@
   height: 100%;
   padding: 0 2vh;
   gap: 2vh;
+}
+#Charts_Window #wrapper2 #time_handler_container #time_scale_choser_container span {
+  color: white;
+}
+#Charts_Window #wrapper2 #time_handler_container #time_scale_choser_container div {
+  padding: 0 0.5vh;
+  border-radius: 1vh;
+  border: 0.4vh #a3a3a3 outset;
+  background: linear-gradient(0deg, #ac9275 0%, #ffdfb2 100%);
+  cursor: pointer;
+  color: black;
+}
+#Charts_Window #wrapper2 #time_handler_container #time_scale_choser_container div:not(.active):hover {
+  border-style: inset;
+}
+#Charts_Window #wrapper2 #time_handler_container #time_scale_choser_container div.active {
+  border-style: inset;
+  background: linear-gradient(0deg, #cfbc55 0%, #f4bb6b 100%);
 }
 #Charts_Window #wrapper2 #time_handler_container #time_choser_container {
   flex: 1;
