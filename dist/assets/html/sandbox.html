@@ -5,127 +5,237 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <!-- <script src="http://127.0.0.1:3000/scripts/test.js" defer></script> -->
-
+        <script src="/scripts/chart.js"></script>
         <script src="/scripts/chartjs-adapter-date-fns.bundle.min.js"></script>
         <!-- <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script> -->
         <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script> -->
-
         <style>
-            main {
-                height: 50vh;
-                width: 50vw;
+            body {
+                background-color: black;
+                height: 100vh;
+                width: 100vw;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                overflow: hidden;
             }
-            img,
-            object {
-                color: red;
-                fill: red;
-                height: 10vh;
-            }
-            .icon {
-                fill: blue;
+            #root {
+                height: 90vh;
+                width: 90vw;
             }
         </style>
     </head>
     <body class="screen">
-        <img src="https://icons.getbootstrap.com/assets/icons/eye-slash.svg" class="icon" />
-        <object data="https://icons.getbootstrap.com/assets/icons/eye-slash.svg" type="image/svg+xml"></object>
-
         <main id="root" class="screen">
             <canvas id="myChart"></canvas>
             <button>Hide</button>
         </main>
 
         <script>
-            var ctx = document.getElementById("myChart").getContext("2d");
-            var data_pairs = [
-                { x: "1", y: 100, z: 20 },
-                { x: "2", y: 90, z: 15 },
-                { x: "3", y: 80, z: 10 },
-                { x: "4", y: 100, z: 20 },
-                { x: "5", y: 90, z: 15 },
-                { x: "6", y: 80, z: 10 },
-            ];
+            const markets_locations = {
+                // ["Black Market"]: { color: "gray", icon_url: "img/Flag_Caerleon.png" },
 
-            var myChart = new Chart(ctx, {
-                type: "bar",
-                data: {
-                    datasets: [
-                        {
-                            type: "line",
-                            label: "Price",
-                            data: data_pairs,
-                            yAxisID: "y-axis-1",
-                            backgroundColor: "rgba(255, 99, 132, 0.2)",
-                            borderColor: "rgba(255, 99, 132, 0.2)",
-                        },
-                        {
-                            type: "bar",
-                            label: "Count",
-                            data: data_pairs,
-                            yAxisID: "y-axis-2",
-                            backgroundColor: "rgba(54, 162, 235, 0.2)",
-                            borderColor: "rgba(54, 162, 235, 0.2)",
-                        },
-                    ],
-                },
-                options: {
-                    scales: {
-                        xAxes: [
-                            {
-                                type: "time",
-                                time: {
-                                    displayFormats: {
-                                        quarter: "MMM YYYY",
-                                    },
-                                },
-                            },
-                        ],
-                        yAxes: [
-                            {
-                                id: "y-axis-1",
-                                type: "linear",
-                                position: "left",
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: "Price",
-                                },
-                            },
-                            {
-                                id: "y-axis-2",
-                                type: "linear",
-                                position: "right",
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: "Count",
-                                },
-                                ticks: {
-                                    beginAtZero: true,
-                                },
-                            },
-                        ],
-                    },
-                    tooltips: {
-                        callbacks: {
-                            label: function (tooltipItem, data) {
-                                var label = data.datasets[tooltipItem.datasetIndex].label || "";
-                                if (label) {
-                                    label += ": ";
-                                }
-                                label += `x: ${tooltipItem.xLabel}, y: ${tooltipItem.yLabel}, z: ${data_pairs[tooltipItem.index].z}`;
-                                return label;
-                            },
-                        },
-                    },
-                },
-            });
+                ["Caerleon"]: { color: "#orange", icon_url: "img/Flag_Caerleon.png", display: true },
+                ["Lymhurst"]: { color: "#00FF00", icon_url: "img/Flag_Lymhurst.png", display: true },
+                ["Fort Sterling"]: { color: "#ADD8E6", icon_url: "img/Flag_Fort_Sterling.png", display: true },
+                ["Thetford"]: { color: "#800080", icon_url: "img/Flag_Thetford.png", display: true },
+                ["Martlock"]: { color: "#0000FF", icon_url: "img/Flag_Martlock.png", display: true },
+                ["Bridgewatch"]: { color: "#FFA500", icon_url: "img/Flag_Bridgewatch.png", display: true },
 
-            document.querySelector("button").onclick = e => {
-                e.target.innerHTML = e.target.innerHTML == "Hide" ? "Display" : "Hide";
-                dataset.hidden = !dataset.hidden;
-                chart.update();
+                ["Arthurs Rest"]: { color: "darkblue", icon_url: "img/Arthurs Rest.png" },
+                ["Merlyns Rest"]: { color: "black", icon_url: "img/Merlyns Rest.png" },
+                ["Morganas Rest"]: { color: "black", icon_url: "img/Morganas Rest.png" },
+
+                // ["Brecilien Market"]: { color: "pink", icon_url: "img/Brecilien Market.png" }, //5003,1001,4000,4001,3007,2000,5003,6,0
+
+                ["Lymhurst Portal"]: { color: "green", icon_url: "img/Portal_Lymhurst.png" },
+                ["Fort Sterling Portal"]: { color: "black", icon_url: "img/Portal_Fort_Sterling.png" },
+                ["Thetford Portal"]: { color: "black", icon_url: "img/Portal_Thetford.png" },
+                ["Martlock Portal"]: { color: "black", icon_url: "img/Portal_Martlock.png" },
+                ["Bridgewatch Portal"]: { color: "black", icon_url: "img/Portal_Bridgewatch.png" },
             };
+            const chart_dataset_basic_config = {
+                data: [],
+                fill: false,
+                tension: 0.2,
+                hidden: false,
+                pointStyle: "rectRot",
+            };
+            const chart_basic_config = {
+                data: { datasets: [] },
+                options: {
+                    elements: {
+                        point: {
+                            // normal
+                            radius: 4,
+                            borderWidth: 2,
+                            backgroundColor: "white",
+                            // on hover
+                            hoverRadius: 6,
+                            hoverBorderWidth: 3,
+                            hoverBackgroundColor: "red",
+                        },
+                    },
+                    // onHover: function (e, active_elements, chart) {
+                    //     active_elements.forEach(ActiveElement => (ActiveElement.element.options.pointStyle = false));
+                    // },
+                    // Turn off animations and data parsing for performance
+                    animation: false,
+                    parsing: false,
+
+                    interaction: {
+                        mode: "nearest",
+                        axis: "x",
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                source: "auto",
+                                // Disabled rotation for performance
+                                maxRotation: 0,
+                                autoSkip: true,
+                            },
+                            title: {
+                                display: false,
+                                text: "aaaaaa",
+                            },
+                            type: "time",
+                            // min: Date.parse("2021-11-01 00:00:00"),
+                            // max: Date.parse("2021-11-09 00:00:00"),
+                            time: {
+                                displayFormats: {
+                                    day: "MMM d",
+                                    hour: "HH a",
+                                },
+                                // unit: "hour",
+                            },
+
+                            grid: {
+                                color: "rgba(255,255,255,0.2)",
+                            },
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            grid: {
+                                color: "rgba(255,255,255,0.3)",
+                            },
+                        },
+                        y2: {
+                            position: "right",
+                            type: "linear",
+                        },
+                    },
+                    plugins: {
+                        decimation: {
+                            enabled: false,
+                            algorithm: "min-max",
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: "line",
+                            },
+                        },
+                        tooltip: {
+                            itemSort: function (a, b) {
+                                return a.element.y - b.element.y;
+                            },
+                            usePointStyle: true,
+                            callbacks: {
+                                afterLabel: function (context) {
+                                    return `items count: ${context.raw.z}`;
+                                },
+                                // labelPointStyle: () => {
+                                //     return { pointStyle: "rectRot", rotation: 0, hoverBorderWidth: 2, hitRadius: 2, backgroundColor: "white" };
+                                // },
+                            },
+                        },
+                    },
+
+                    //  Responsive Config
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 16 / 9,
+                    // onResize: (a, b, c) => {
+                    //     console.log(a, b, c);
+                    // },
+                },
+            };
+            (async () => {
+                let response = await fetch("https://www.albion-online-data.com/api/v2/stats/charts/UNIQUE_HIDEOUT?qualities=1&date=12-01-2022&end_date=01-01-2023&time-scale=24");
+
+                let json = await response.json();
+
+                let new_datasets = [];
+
+                if (json.length) {
+                    json.filter(market => markets_locations[market.location]).map(market => {
+                        let dataset = {
+                            ...chart_dataset_basic_config,
+                            type: "line",
+                            yAxisID: "y1",
+
+                            // normal
+                            radius: 3,
+                            borderWidth: 3,
+                            backgroundColor: "white",
+                            // on hover
+                            hoverRadius: 5,
+                            hoverBorderWidth: 2,
+                            hoverBackgroundColor: "red",
+
+                            label: market.location,
+                            data: market.data.prices_avg.map((avg_price, i) => {
+                                let record = { x: Date.parse(market.data.timestamps[i]), y: avg_price, z: market.data.item_count[i] };
+                                return record;
+                            }),
+                            borderColor: markets_locations[market.location].color || "red",
+                            hidden: json.length > 5 ? !markets_locations[market.location].display : false,
+                        };
+                        new_datasets.push(dataset);
+                        return dataset;
+                    });
+
+                    json.filter(market => markets_locations[market.location]).map(market => {
+                        let dataset = {
+                            type: "line",
+                            yAxisID: "y2",
+
+                            tension: 0.5,
+
+                            // normal
+                            radius: 2,
+                            borderWidth: 2,
+                            backgroundColor: "white",
+                            // on hover
+                            hoverRadius: 4,
+                            hoverBorderWidth: 2,
+                            hoverBackgroundColor: "red",
+
+                            label: market.location,
+                            data: market.data.item_count.map((count, i) => {
+                                let record = { x: Date.parse(market.data.timestamps[i]), y: count };
+                                return record;
+                            }),
+                            borderColor: markets_locations[market.location].color + "40",
+                            backgroundColor: markets_locations[market.location].color + "40",
+                            hidden: json.length > 5 ? !markets_locations[market.location].display : false,
+                        };
+                        new_datasets.push(dataset);
+                        return dataset;
+                    });
+                }
+
+                // ctx!.current!.options!.scales!.x!.min! = typeof start_date === "string" ? new Date(start_date).getTime() : start_date.getTime();
+                // ctx!.current!.options!.scales!.x!.max! = typeof end_date === "string" ? new Date(end_date).getTime() : end_date.getTime();
+
+                const ctx = new Chart(document.querySelector("#myChart"), chart_basic_config);
+                ctx.data.datasets = new_datasets;
+                ctx.update();
+            })();
         </script>
     </body>
 </html>
