@@ -32,6 +32,16 @@ export const ImgElement: FunctionComponent<Props> = (props: Props) => {
     );
 };
 
-export function formatNumber(num:number) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+export function formatNumber(n: number): string {
+    if (n >= 1000000000) {
+        n /= 1000000000;
+        return n + "B";
+    } else if (n >= 1000000) {
+        n /= 1000000;
+        return n + "M";
+    } else if (n >= 1000) {
+        n /= 1000;
+        return n + "K";
+    }
+    return n.toString();
 }

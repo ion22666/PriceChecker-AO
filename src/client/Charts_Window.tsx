@@ -1,33 +1,31 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { GlobalContext } from ".";
 import { Chart, registerables } from "chart.js";
 import type * as ChartTypes from "chart.js";
 import "chartjs-adapter-date-fns";
 import { DateFormater, formatNumber, ImgElement } from "./components/utils";
-import { time } from "console";
 
 // Make the "line" ctx type available
 Chart.register(...registerables);
 
 // the type of a coordinate-like price data // x=time & y=price
-type data_pair = { x: number; y: number; z: number };
+type data_pair = { x: number; y: number };
+type dataset_pair = { price: LineChartDataset; count: LineChartDataset; market: string; display: boolean };
 
-type chart_type = "line";
-type ChartData = ChartTypes.ChartData<chart_type, data_pair[], string>;
-type ChartOptions = ChartTypes.ChartOptions<chart_type>;
-type ChartDataset = ChartTypes.ChartDataset<chart_type, data_pair[]>;
-type ChartConfiguration = ChartTypes.ChartConfiguration<chart_type, data_pair[], string>;
+type LineChartDataset = ChartTypes.ChartDataset<"line", data_pair[]>;
+type ChartConfiguration = ChartTypes.ChartConfiguration<"line", data_pair[], string>;
 
 //
 const markets_locations: { [key: string]: { color: string; icon_url: string; display?: boolean } } = {
     // ["Black Market"]: { color: "gray", icon_url: "img/Flag_Caerleon.png" },
 
-    ["Caerleon"]: { color: "black", icon_url: "img/Flag_Caerleon.png", display: true },
-    ["Lymhurst"]: { color: "green", icon_url: "img/Flag_Lymhurst.png", display: true },
-    ["Fort Sterling"]: { color: "lightblue", icon_url: "img/Flag_Fort_Sterling.png", display: true },
-    ["Thetford"]: { color: "purple", icon_url: "img/Flag_Thetford.png", display: true },
-    ["Martlock"]: { color: "blue", icon_url: "img/Flag_Martlock.png", display: true },
-    ["Bridgewatch"]: { color: "orange", icon_url: "img/Flag_Bridgewatch.png", display: true },
+    ["Caerleon"]: { color: "#ff0000", icon_url: "img/Flag_Caerleon.png", display: true },
+
+    ["Lymhurst"]: { color: "#00FF00", icon_url: "img/Flag_Lymhurst.png", display: true },
+    ["Fort Sterling"]: { color: "#ADD8E6", icon_url: "img/Flag_Fort_Sterling.png", display: true },
+    ["Thetford"]: { color: "#800080", icon_url: "img/Flag_Thetford.png", display: true },
+    ["Martlock"]: { color: "#0000FF", icon_url: "img/Flag_Martlock.png", display: true },
+    ["Bridgewatch"]: { color: "#FFA500", icon_url: "img/Flag_Bridgewatch.png", display: true },
 
     ["Arthurs Rest"]: { color: "darkblue", icon_url: "img/Arthurs Rest.png" },
     ["Merlyns Rest"]: { color: "black", icon_url: "img/Merlyns Rest.png" },
@@ -42,22 +40,10 @@ const markets_locations: { [key: string]: { color: string; icon_url: string; dis
     ["Bridgewatch Portal"]: { color: "black", icon_url: "img/Portal_Bridgewatch.png" },
 };
 
-const chart_basic_config: ChartConfiguration = {
+const chart_config: ChartConfiguration = {
     data: { datasets: [] },
     type: "line",
     options: {
-        elements: {
-            point: {
-                // normal
-                radius: 4,
-                borderWidth: 2,
-                backgroundColor: "white",
-                // on hover
-                hoverRadius: 6,
-                hoverBorderWidth: 3,
-                hoverBackgroundColor: "red",
-            },
-        },
         // onHover: function (e, active_elements, chart) {
         //     active_elements.forEach(ActiveElement => (ActiveElement.element.options.pointStyle = false));
         // },
@@ -97,10 +83,36 @@ const chart_basic_config: ChartConfiguration = {
                     color: "rgba(255,255,255,0.2)",
                 },
             },
-            y: {
-                beginAtZero: true,
+            "price-axis": {
+                title: {
+                    display: true,
+                    text: "average price",
+                },
+                beginAtZero: false,
+                position: "left",
+                type: "linear",
                 grid: {
-                    color: "rgba(255,255,255,0.3)",
+                    color: "rgba(255,255,255,0.5)",
+                },
+                ticks: {
+                    callback: (value, index, values) => formatNumber(typeof value === "string" ? parseInt(value) : value),
+                },
+            },
+            "count-axis": {
+                title: {
+                    display: true,
+                    text: "items count",
+                },
+
+                display: false,
+                beginAtZero: false,
+                position: "right",
+                type: "linear",
+                grid: {
+                    color: "rgba(255,255,255,0.1)",
+                },
+                ticks: {
+                    callback: (value, index, values) => formatNumber(typeof value === "string" ? parseInt(value) : value),
                 },
             },
         },
@@ -114,16 +126,42 @@ const chart_basic_config: ChartConfiguration = {
                 labels: {
                     usePointStyle: true,
                     pointStyle: "line",
+                    filter(item, data) {
+                        return eval(`data.datasets[item.datasetIndex].yAxisID === "price-axis"`);
+                    },
                 },
             },
             tooltip: {
                 itemSort: function (a, b) {
-                    return a.element.y - b.element.y;
+                    if (a.dataset.yAxisID === b.dataset.yAxisID) {
+                        return a.element.y - b.element.y;
+                    } else {
+                        return a.dataset.yAxisID === "price-axis" ? -1 : 1;
+                    }
                 },
                 usePointStyle: true,
                 callbacks: {
-                    afterLabel: function (context): string {
-                        return `items count: ${(context.raw as data_pair).z}`;
+                    // afterBody: (tooltipItems) => {
+                    //     let price_elements = tooltipItems.filter(e => (e.dataset.yAxisID = "price-axis"));
+                    //     let count_elements = tooltipItems.filter(e => (e.dataset.yAxisID = "price-count"));
+                    //     return `${tooltipItems[0].label}\nAvg Price:\n${price_elements.map(e=>`${e.dataset.label}`)}`;
+                    // },
+                    beforeBody: function (tooltipItems: ChartTypes.TooltipItem<"line">[]) {
+                        for (let i = 0; i < tooltipItems.length; i++) {
+                            if (tooltipItems[i].dataset.yAxisID === "price-axis") {
+                                if (i === 0) tooltipItems[i].element.options.my_field = "first price";
+                            } else {
+                                if (i === 0 || tooltipItems[i - 1].dataset.yAxisID === "price-axis") tooltipItems[i].element.options.my_field = "first count";
+                            }
+                        }
+                    },
+                    beforeLabel: function (tooltipItem): string | void {
+                        if (tooltipItem.element.options.my_field === "first price") {
+                            return "<<<Average Price>>>";
+                        }
+                        if (tooltipItem.element.options.my_field === "first count") {
+                            return "<<<Items Count>>>";
+                        }
                     },
                     // labelPointStyle: () => {
                     //     return { pointStyle: "rectRot", rotation: 0, hoverBorderWidth: 2, hitRadius: 2, backgroundColor: "white" };
@@ -136,18 +174,47 @@ const chart_basic_config: ChartConfiguration = {
         responsive: true,
         maintainAspectRatio: true,
         aspectRatio: 16 / 9,
-        // onResize: (a, b, c) => {
-        //     console.log(a, b, c);
-        // },
     },
 };
 
-const chart_dataset_basic_config: ChartDataset = {
+const price_dataset_options: LineChartDataset = {
+    type: "line",
+    yAxisID: "price-axis",
     data: [],
     fill: false,
     tension: 0.2,
     hidden: false,
+
     pointStyle: "rectRot",
+
+    // normal
+    pointRadius: 3,
+    borderWidth: 2.5,
+    backgroundColor: "white",
+    // on hover
+    pointHoverRadius: 5,
+    hoverBorderWidth: 2.5,
+    hoverBackgroundColor: "red",
+};
+
+const count_dataset_options: LineChartDataset = {
+    type: "line",
+    yAxisID: "count-axis",
+    data: [],
+    fill: false,
+    tension: 0.2,
+    hidden: false,
+
+    pointStyle: "rectRot",
+
+    // normal
+    pointRadius: 0,
+    borderWidth: 2,
+    backgroundColor: "white",
+    // on hover
+    pointHoverRadius: 4,
+    hoverBorderWidth: 2,
+    hoverBackgroundColor: "red",
 };
 
 const x_square_svg = (
@@ -177,79 +244,142 @@ export const Charts_Window: FunctionComponent = () => {
     const canvasRef = React.useRef<HTMLCanvasElement>();
     let ctx = React.useRef<Chart>();
 
-    let [chart_datasets, SET_chart_datasets] = React.useState<ChartDataset[]>([]);
+    let [chart_datasets, SET_chart_datasets] = React.useState<dataset_pair[]>([]);
     let [active_time, SET_active_time] = React.useState<string>("month");
     let [custom_time, SET_custom_time] = React.useState<{ start: string; end: string }>({ start: DateFormater(new Date(new Date().getTime() - 2592000000)), end: DateFormater(new Date()) });
     let [chart_time_scale, SET_chart_time_scale] = React.useState<"6" | "24">("24");
+    let [count_datasets_display, SET_count_datasets_display] = React.useState<boolean>(false);
+    let [price_datasets_display, SET_price_datasets_display] = React.useState<boolean>(true);
 
     let forceReRenderDatasetsDiv = () => {
-        SET_chart_datasets(datasets => [...datasets]);
+        SET_chart_datasets(v => [...v]);
     };
 
-    let update_chart_datasets = async (
-        item: Items = G.chart_items[0]!,
-        start_date: string | Date = new Date(new Date().setMonth(new Date().getMonth() - 1)),
-        end_date: string | Date = new Date(),
-        time_scale: "6" | "12" | "24" = chart_time_scale
-    ): Promise<any> => {
-        // date -> month-day-year
-        let response = await fetch(
-            `https://www.albion-online-data.com/api/v2/stats/charts/
+    let update_chart_datasets = React.useCallback(
+        async (item: Items = G.chart_items[0]!, start_date: string | Date = new Date(new Date().setMonth(new Date().getMonth() - 1)), end_date: string | Date = new Date(), time_scale: "6" | "12" | "24" = chart_time_scale): Promise<any> => {
+            // date -> month-day-year
+            let response = await fetch(
+                `https://www.albion-online-data.com/api/v2/stats/charts/
             ${item!.UniqueName}
             ?qualities=${item?.quality || "1"}
             &date=${typeof start_date === "string" ? start_date : DateFormater(start_date)}
             &end_date=${typeof end_date === "string" ? end_date : DateFormater(end_date)}
             &time-scale=${time_scale}`.replace(/\s|\n/g, "")
-        );
-        if (!response.ok) {
-            if (response.status == 400) return (await response.json()).errors;
-            return response.statusText;
-        }
-        let json: MarketDataResponse = await response.json();
+            );
+            if (!response.ok) {
+                if (response.status == 400) return (await response.json()).errors;
+                return response.statusText;
+            }
+            let json: MarketDataResponse = await response.json();
+            console.log(chart_datasets);
+            let old_datasets_states: { location: string; display: boolean }[] = chart_datasets.map<{ location: string; display: boolean }>(v => Object.create({ location: v.market, display: v.display }));
+            ctx.current!.data.datasets = [];
+            let new_datasets: dataset_pair[] = [];
 
-        let new_datasets: ChartDataset[] = [];
+            if (json.length) {
+                json.filter(market => markets_locations[market.location]).forEach(market => {
+                    console.log(old_datasets_states);
+                    let display_dataset_pair = old_datasets_states.length === 0 ? markets_locations[market.location].display === true : old_datasets_states.find(v => v.location === market.location)?.display === true;
+                    let dataset_pair: dataset_pair = {
+                        market: market.location,
+                        display: display_dataset_pair,
+                        price: {
+                            ...price_dataset_options,
 
-        if (json.length) {
-            json.filter(market => markets_locations[market.location]).map(market => {
-                let dataset: ChartDataset = {
-                    ...chart_dataset_basic_config,
+                            label: market.location,
+                            data: market.data.prices_avg.map((avg_price, i): data_pair => {
+                                return { x: Date.parse(market.data.timestamps[i]), y: avg_price };
+                            }),
 
-                    label: market.location,
-                    data: market.data.prices_avg.map((avg_price, i) => {
-                        let record: data_pair = { x: Date.parse(market.data.timestamps[i]), y: avg_price, z: market.data.item_count[i] };
-                        return record;
-                    }),
-                    borderColor: markets_locations[market.location].color || "red",
-                    hidden: json.length > 5 ? !markets_locations[market.location].display : false,
-                };
-                new_datasets.push(dataset);
-                return dataset;
+                            borderColor: markets_locations[market.location].color || "red",
+                            hidden: !(display_dataset_pair && price_datasets_display),
+                        },
+                        count: {
+                            ...count_dataset_options,
+
+                            label: market.location,
+                            data: market.data.item_count.map((count, i): data_pair => {
+                                return { x: Date.parse(market.data.timestamps[i]), y: count };
+                            }),
+
+                            borderColor: markets_locations[market.location].color + "40",
+                            backgroundColor: markets_locations[market.location].color + "40",
+                            hidden: !(display_dataset_pair && count_datasets_display),
+                        },
+                    };
+                    new_datasets.push(dataset_pair);
+                    ctx.current!.data.datasets.push(dataset_pair.price);
+                    ctx.current!.data.datasets.push(dataset_pair.count);
+                });
+            }
+
+            // ctx!.current!.options!.scales!.x!.min! = typeof start_date === "string" ? new Date(start_date).getTime() : start_date.getTime();
+            // ctx!.current!.options!.scales!.x!.max! = typeof end_date === "string" ? new Date(end_date).getTime() : end_date.getTime();
+            console.log("END");
+            SET_chart_datasets(new_datasets);
+            ctx.current!.update();
+        },
+        [chart_datasets]
+    );
+
+    let toggle_chart_dataset_pair = (dataset_pair: dataset_pair): void => {
+        if (!price_datasets_display && !count_datasets_display) {
+            SET_price_datasets_display(true);
+            price_datasets_display = true;
+            chart_datasets.forEach(v => {
+                if (v.display) {
+                    v.price.hidden = !price_datasets_display;
+                    v.count.hidden = !count_datasets_display;
+                }
             });
+        } else {
+            let was_displayed = dataset_pair.display;
+            dataset_pair.display = !was_displayed;
+
+            dataset_pair.price.hidden = !(!was_displayed && price_datasets_display);
+            dataset_pair.count.hidden = !(!was_displayed && count_datasets_display);
         }
 
-        // ctx!.current!.options!.scales!.x!.min! = typeof start_date === "string" ? new Date(start_date).getTime() : start_date.getTime();
-        // ctx!.current!.options!.scales!.x!.max! = typeof end_date === "string" ? new Date(end_date).getTime() : end_date.getTime();
-
-        ctx.current!.data.datasets = new_datasets;
-        SET_chart_datasets(new_datasets);
-        ctx.current!.update();
-    };
-
-    let toggle_chart_dataset = (dataset: ChartDataset): void => {
-        markets_locations[dataset.label!].display = dataset.hidden;
-        dataset.hidden = !dataset.hidden;
         ctx.current!.update();
         forceReRenderDatasetsDiv();
     };
 
-    let set_chart_time_scale = React.useCallback((scale: "6" | "24") => {
-        SET_chart_time_scale(scale);
-        update_chart_datasets(undefined, undefined, undefined, scale);
-    }, []);
+    let toggle_datasets_by_axis = (axis_id: "price-axis" | "count-axis") => {
+        let was_displayed = chart_config!.options!.scales![axis_id]!.display! === true;
+
+        // hide/display the axis labels
+        chart_config!.options!.scales![axis_id]!.display! = !was_displayed;
+
+        if (axis_id === "price-axis") {
+            SET_price_datasets_display(!was_displayed);
+            price_datasets_display = !was_displayed;
+            chart_datasets.forEach(dataset_pair => (dataset_pair.price.hidden = !(!was_displayed && dataset_pair.display)));
+        } else {
+            SET_count_datasets_display(!was_displayed);
+            count_datasets_display = !was_displayed;
+            console.log(count_datasets_display);
+            chart_datasets.forEach(dataset_pair => (dataset_pair.count.hidden = !(!was_displayed && dataset_pair.display)));
+        }
+
+        if (!price_datasets_display && !count_datasets_display) {
+            console.log("ambele off");
+            chart_datasets.forEach(v => (v.price.hidden = v.count.hidden = true));
+        }
+        ctx.current!.update();
+        forceReRenderDatasetsDiv();
+    };
+
+    let set_chart_time_scale = React.useCallback(
+        (scale: "6" | "24") => {
+            SET_chart_time_scale(scale);
+            update_chart_datasets(undefined, undefined, undefined, scale);
+        },
+        [chart_datasets]
+    );
 
     // Declare the ctx hook only once
     React.useEffect(() => {
-        ctx.current = new Chart(canvasRef.current!, chart_basic_config);
+        ctx.current = new Chart(canvasRef.current!, chart_config);
         ctx.current!.config.options!.plugins!.legend!.onClick = function (event, legendItem, legend) {
             ctx.current!.data.datasets[legendItem.datasetIndex!].hidden = !legendItem.hidden;
             ctx.current!.update();
@@ -265,24 +395,31 @@ export const Charts_Window: FunctionComponent = () => {
         update_chart_datasets(on_screen_item);
     }, [G.chart_items]);
 
-    React.useEffect(() => {
-        console.log(custom_time);
-    }, [custom_time]);
     return (
         <div id="Charts_Window" className="window">
             <div id="wrapper1">
+                <div id="togle_datasets_types_container">
+                    <span className={price_datasets_display ? "active" : ""} onClick={() => toggle_datasets_by_axis("price-axis")}>
+                        {price_datasets_display ? check_square_svg_fill : check_square_svg}
+                        Price
+                    </span>
+                    <span className={count_datasets_display ? "active" : ""} onClick={() => toggle_datasets_by_axis("count-axis")}>
+                        {count_datasets_display! ? check_square_svg_fill : check_square_svg}
+                        Count
+                    </span>
+                </div>
                 <div id="chart_items_container">
                     {G.chart_items.length === 0 ? (
                         <>
                             <div id="main_item_name">No item selected</div>
                             <ImgElement id="main_item_img" />
-                            <div id="history_items"></div>
+                            {/* <div id="history_items"></div> */}
                         </>
                     ) : (
                         <>
                             <div id="main_item_name">{G.chart_items[0]?.LocalizedNames["EN-US"] || G.chart_items[0]!.UniqueName}</div>
                             <ImgElement id="main_item_img" unique_name={G.chart_items[0]!.UniqueName} quality={G.chart_items[0]!.quality} />
-                            <div id="history_items_container">
+                            {/* <div id="history_items_container">
                                 {G.chart_items.slice(1, 6).map(item => {
                                     return (
                                         <ImgElement
@@ -296,17 +433,19 @@ export const Charts_Window: FunctionComponent = () => {
                                         />
                                     );
                                 })}
-                            </div>
+                            </div> */}
                         </>
                     )}
                 </div>
                 <div id="handle_chart_datasets">
                     {Object.entries(markets_locations).map(([market_name, market_props]) => {
-                        let dataset = chart_datasets.find(dataset => dataset.label == market_name);
+                        let dataset_pair = chart_datasets.find(({ price, count }) => price.label == market_name);
+
+                        let inactive = dataset_pair ? dataset_pair.price.hidden === true && dataset_pair.count.hidden === true : true;
                         return (
-                            <div className={`market_row ${dataset ? "active" + (dataset.hidden ? " hidden" : "") : "disabled"}`} key={market_name} onClick={dataset ? () => toggle_chart_dataset(dataset!) : void 0}>
+                            <div className={`market_row ${dataset_pair ? "active" + (inactive ? " hidden" : "") : "disabled"}`} key={market_name} onClick={dataset_pair ? () => toggle_chart_dataset_pair(dataset_pair!) : void 0}>
                                 {/* svg icon */}
-                                {dataset ? (dataset.hidden ? check_square_svg : check_square_svg_fill) : x_square_svg}
+                                {dataset_pair ? (inactive ? check_square_svg : check_square_svg_fill) : x_square_svg}
                                 <div style={{ display: "flex", justifyContent: "space-between", flex: "1", height: "100%" }}>
                                     <img src={market_props.icon_url} alt="" />
                                     {market_name}

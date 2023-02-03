@@ -392,8 +392,24 @@
   width: 100%;
   padding: 1vh;
 }
+#Charts_Window #wrapper1 #togle_datasets_types_container {
+  display: flex;
+  gap: 1vh;
+}
+#Charts_Window #wrapper1 #togle_datasets_types_container span {
+  display: flex;
+  gap: 1vh;
+  height: 4vh;
+  padding: 1vh;
+  justify-content: center;
+  align-items: center;
+  font-size: 3vh;
+  color: white;
+}
+#Charts_Window #wrapper1 #togle_datasets_types_container span svg {
+  height: 100%;
+}
 #Charts_Window #wrapper1 #chart_items_container {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -419,6 +435,7 @@
   aspect-ratio: 1/1;
 }
 #Charts_Window #wrapper1 #handle_chart_datasets {
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
