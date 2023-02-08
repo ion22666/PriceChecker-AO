@@ -69,6 +69,62 @@ $box-shadow1: 0 0 0.4vh black;
                 width: 20vh;
                 aspect-ratio: 1/1;
             }
+            #basic_item_properties_container {
+                display: flex;
+                gap: 1vh;
+                padding: 1vh;
+                div {
+                    font-size: 2vh;
+                    padding: 0 1vh;
+                    border-radius: 1vh;
+                    border: 0.2vh #a3a3a3 outset;
+                    background: linear-gradient(0deg, #ac9275 0%, #ffdfb2 100%);
+                    cursor: pointer;
+                    height: fit-content;
+                    &:hover {
+                        border-style: inset;
+                    }
+                    &.selected {
+                        border-radius: 2vmin 2vmin 0 0;
+                        border-style: inset;
+                    }
+                    .Options_Container {
+                        &.clossed {
+                            height: 0;
+                            border: 0;
+                            padding: 0;
+                        }
+                        &.open {
+                            height: fit-content;
+                        }
+                        z-index: 11;
+                        background-color: $dark;
+                        position: absolute;
+                        width: 100%;
+                        bottom: 0;
+                        transform: translateY(100%);
+                        left: 0;
+                        overflow: hidden;
+                        padding: 0.2vmax 1vmax;
+                        border: 0.5vh outset;
+                        background: #5e5c5c;
+                        background: linear-gradient(0deg, #33343b 0%, #6d6f82 100%);
+                        .Option {
+                            font-size: 2.4vmin;
+                            color: khaki;
+                            text-align: center;
+                            cursor: pointer;
+                            &:hover {
+                                background-color: #5e5c5c;
+                            }
+                            &.selected {
+                                background-color: rgb(28, 198, 86);
+                                pointer-events: none !important;
+                            }
+                        }
+                    }
+                }
+            }
             #history_items_container {
                 display: flex;
                 flex-wrap: nowrap;

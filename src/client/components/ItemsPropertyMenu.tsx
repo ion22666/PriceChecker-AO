@@ -7,10 +7,10 @@ type Property_Component = {
     property: SearchProperty;
     SETproperties: StateChanger<SearchProperties>;
     fetch_items(): Promise<void>;
-    clicked_property_hook: [string, StateChanger<string>];
+    clicked_property_hook: [string, StateChanger<string>];//
 };
 
-const Property_Chooser_Component: FunctionComponent<Property_Component> = (props: Property_Component) => {
+export const Property_Chooser_Component: FunctionComponent<Property_Component> = (props: Property_Component) => {
     let property = props.property as SearchVisibleProperty;
     let value_index = property.ValuesList.findIndex(v => v == property.Value);
 

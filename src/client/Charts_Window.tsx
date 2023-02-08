@@ -11,7 +11,7 @@ Chart.register(...registerables);
 // the type of a coordinate-like price data // x=time & y=price
 type data_pair = { x: number; y: number };
 type dataset_pair = { price: LineChartDataset; count: LineChartDataset; market: string; display: boolean };
-
+type ItemVariants = { tier: string[]; enchant: string[]; quality: string[] };
 type LineChartDataset = ChartTypes.ChartDataset<"line", data_pair[]>;
 type ChartConfiguration = ChartTypes.ChartConfiguration<"line", data_pair[], string>;
 
@@ -251,6 +251,9 @@ export const Charts_Window: FunctionComponent = () => {
     let [count_datasets_display, SET_count_datasets_display] = React.useState<boolean>(false);
     let [price_datasets_display, SET_price_datasets_display] = React.useState<boolean>(true);
 
+    let [variants, SET_variants] = React.useState<ItemVariants>({ tier: [], enchant: [], quality: [] });
+    let [clicked_property, SET_clicked_property] = React.useState<"" | "tier" | "enchant" | "quality">("");
+
     let forceReRenderDatasetsDiv = () => {
         SET_chart_datasets(v => [...v]);
     };
@@ -393,6 +396,9 @@ export const Charts_Window: FunctionComponent = () => {
 
         let on_screen_item = G.chart_items[0]!;
         update_chart_datasets(on_screen_item);
+        (async () => {
+            SET_variants(await fetch(`/api/item/${G.chart_items[0]?.UniqueName}/variants`).then(v => v.json()));
+        })();
     }, [G.chart_items]);
 
     return (
@@ -436,6 +442,86 @@ export const Charts_Window: FunctionComponent = () => {
                             </div> */}
                         </>
                     )}
+                    <div id="basic_item_properties_container">
+                        {(() => {
+                            if (G.chart_items.length === 0) {
+                                return (
+                                    <>
+                                        <div className="disabled">Tier</div>
+                                        <div className="disabled">Enchant</div>
+                                        <div className="disabled">Quality</div>
+                                    </>
+                                );
+                            }
+
+                            const [, old_tier = 0, raw_name = "", old_enchant = 0] = /(^T(\d))?_([^@]+)?(?:@(\d))?$/.exec(G.chart_items[0]!.UniqueName) || [];
+
+                            return (
+                                <>
+                                    <div id={"tier"} className={(clicked_property === "tier" ? "active" : "") + (variants.tier.length ? "" : " disabled")} onClick={_ => SET_clicked_property("tier")}>
+                                        {!variants.tier.length ? (
+                                            <></>
+                                        ) : (
+                                            variants.tier.map(t => {
+                                                return (
+                                                    <div
+                                                        onClick={async () => {
+                                                            let new_item = await fetch(`api/item/${"T" + t + "_" + raw_name + (old_enchant ? "@" + old_enchant : "")}`).then(v => v.json());
+                                                            SET_G(g => {
+                                                                g.chart_items.unshift(new_item);
+                                                                return { ...g };
+                                                            });
+                                                        }}
+                                                    >
+                                                        {t}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+
+                                    <div id={"enchant"} className={(clicked_property === "enchant" ? "active" : "") + (variants.enchant.length ? "" : " disabled")} onClick={_ => SET_clicked_property("enchant")}>
+                                        {!variants.enchant.length ? (
+                                            <></>
+                                        ) : (
+                                            variants.enchant.map(e => {
+                                                return (
+                                                    <div
+                                                        onClick={async () => {
+                                                            let new_item = await fetch(`api/item/${"T" + old_tier + "_" + raw_name + (e === "0" ? "" : "@" + e)}`).then(v => v.json());
+                                                            SET_G(g => {
+                                                                g.chart_items.unshift(new_item);
+                                                                return { ...g };
+                                                            });
+                                                        }}
+                                                    >
+                                                        {e}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+
+                                    <div id={"quality"} className={(clicked_property === "quality" ? "active" : "") + (variants.quality.length ? "" : " disabled")} onClick={_ => SET_clicked_property("quality")}>
+                                        {!variants.enchant.length ? (
+                                            <></>
+                                        ) : (
+                                            variants.quality.map(q => {
+                                                return (
+                                                    <div
+                                                        onClick={() => {
+                                                            G.chart_items[0]!.quality = q;
+                                                            update_chart_datasets();
+                                                        }}
+                                                    ></div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
                 </div>
                 <div id="handle_chart_datasets">
                     {Object.entries(markets_locations).map(([market_name, market_props]) => {

@@ -44,6 +44,35 @@ export const get_one: Handler = async (req, res) => {
     }
 };
 
+export const get_variants: Handler = async (req, res) => {
+    let raw_name = req.params["unique_name"].slice(2, req.params["unique_name"][req.params["unique_name"].length - 2] === "@" ? req.params["unique_name"].length - 2 : req.params["unique_name"].length);
+    let response_obj: { tier: string[]; enchant: string[]; quality: string[] } = { tier: [], enchant: [], quality: [] };
+
+    if (!raw_name) return res.status(200).json(response_obj);
+
+    let regex = new RegExp(`(^T\\d{1})?${raw_name}(@\\d{1})?$`);
+
+    let items = await DB.collections.itemsArray.find({ UniqueName: regex }).project({ _id: 0, UniqueName: 1, "@tier": 1, "@enchantmentlevel": 1, "@maxqualitylevel": 1 }).toArray();
+    if (!items.length) {
+        return response_obj;
+    }
+    if (items[0]["@maxqualitylevel"]) {
+        response_obj.quality.push(...Array.from({ length: parseInt(items[0]["@maxqualitylevel"]) + 1 }, (_, i) => `${i}`));
+    } else {
+        response_obj.quality.push("1");
+    }
+    items.forEach(item => {
+        const [, tier = "0", , enchant = "0"] = /^T(\d)_.+?(@(\d))?$/.exec(item.UniqueName) || [0, item["@tier"] ? item["@tier"] : "0", 0, "0"];
+        if (!response_obj.tier.find(v => v === tier) && tier !== "0") response_obj.tier.push(tier);
+        if (!response_obj.enchant.find(v => v === enchant)) response_obj.enchant.push(enchant);
+    });
+    response_obj.tier.sort();
+    response_obj.enchant.sort();
+    response_obj.quality.sort();
+
+    return res.status(200).json(response_obj);
+};
+
 function check_param(name: string, value: string | undefined, default_value: string, default_mirror_values?: string[] | null, values?: string[] | null, int_range?: [number, number] | null): string {
     if (!value) {
         return default_value;
