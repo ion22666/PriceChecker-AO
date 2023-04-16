@@ -1,25 +1,19 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { SearchItem } from "./components/SearchItem";
 import { ItemsContainer } from "./components/ItemsContainer";
 import { Items_Properties_Chooser_Menu } from "./components/ItemsPropertyMenu";
-import { available_category, available_sub_category } from "../api/controllers/constants";
+import { available_category } from "../api/controllers/constants";
 import { FirstLetterUpperCaser } from "./components/utils";
 import { GlobalContext } from ".";
-
-const local: {
-    ItemsContainerRef: null | React.MutableRefObject<any>;
-    reset_scroll(): void;
-} = {
+const local = {
     ItemsContainerRef: null,
     reset_scroll() {
-        this.ItemsContainerRef!.current.scrollTop = 0;
+        this.ItemsContainerRef.current.scrollTop = 0;
     },
 };
-
-export const Window1Context = React.createContext([local, () => void 0] as [typeof local, StateChanger<typeof local>]);
-
-export const default_properties: SearchProperties = [
+export const Window1Context = React.createContext([local, () => void 0]);
+export const default_properties = [
     {
         id: "category",
         Value: "all",
@@ -76,18 +70,17 @@ export const default_properties: SearchProperties = [
         type: "hidden",
     },
 ];
-
-export const Market_Window: FunctionComponent = () => {
+export const Market_Window = () => {
     let [G, SET_G] = React.useContext(GlobalContext);
     let [Locals, SET_Locals] = React.useState(local);
-    let [properties, SETproperties] = React.useState<SearchProperties>([...default_properties]);
-    let [items, SET_items] = React.useState<Items[]>([]);
-    let [is_loading, SET_is_loading] = React.useState<boolean>(true);
-    let fetch_items = async (): Promise<void> => {
+    let [properties, SETproperties] = React.useState([...default_properties]);
+    let [items, SET_items] = React.useState([]);
+    let [is_loading, SET_is_loading] = React.useState(true);
+    let fetch_items = async () => {
         Locals.reset_scroll();
         SET_is_loading(true);
-        properties.find(p => p.id == "count")!.Value = "10";
-        properties.find(p => p.id == "page")!.Value = "0";
+        properties.find(p => p.id == "count").Value = "10";
+        properties.find(p => p.id == "page").Value = "0";
         let url_string = properties.map(property => `${property.id}=${property.Value}`).join("&");
         let response = await fetch("api/items?" + url_string);
         if (!response.ok) {
@@ -95,7 +88,7 @@ export const Market_Window: FunctionComponent = () => {
             SET_is_loading(false);
             return;
         }
-        let new_items: Items[] = (await response.json()).data;
+        let new_items = (await response.json()).data;
         let expeted = 10;
         if (new_items.length < expeted) {
             new_items.push(null);
@@ -103,47 +96,32 @@ export const Market_Window: FunctionComponent = () => {
         SET_items(new_items);
         SET_is_loading(false);
     };
-    let append_items = async (): Promise<void> => {
+    let append_items = async () => {
         let i = properties.findIndex(p => p.id == "page");
         properties[i].Value = (parseInt(properties[i].Value) + 1).toString();
         let url_string = properties.map(property => `${property.id}=${property.Value}`).join("&");
         let response = await fetch("api/items?" + url_string);
-        let new_items: Items[];
+        let new_items;
         if (!response.ok) {
             new_items = [null];
-        } else {
+        }
+        else {
             new_items = (await response.json()).data;
         }
-        let expeted = parseInt(properties.find(p => p.id == "count")!.Value);
+        let expeted = parseInt(properties.find(p => p.id == "count").Value);
         if (new_items.length < expeted) {
             new_items.push(null);
         }
-        SET_items((i: Items[]) => [...i, ...new_items]);
+        SET_items((i) => [...i, ...new_items]);
     };
-
     React.useEffect(() => {
         fetch_items();
     }, []);
     let i = 1;
-    return (
-        <Window1Context.Provider value={[Locals, SET_Locals]}>
-            <div id="market_window" className="window">
-                <div
-                    id="go_to_charts"
-                    onClick={() => {
+    return (_jsx(Window1Context.Provider, { value: [Locals, SET_Locals], children: _jsxs("div", { id: "market_window", className: "window", children: [_jsx("div", { id: "go_to_charts", onClick: () => {
                         SET_G(s => {
                             s.active_window = s.active_window == 1 ? 2 : 1;
                             return { ...s };
                         });
-                    }}
-                    style={G.active_window === 2 ? { transform: " translatex(90%)", zIndex: "99999" } : { zIndex: "99999" }}
-                >
-                    {G.active_window === 1 ? ">" : "<"}
-                </div>
-                <SearchItem fetch_items={fetch_items} SETproperties={SETproperties} properties={properties} />
-                <Items_Properties_Chooser_Menu fetch_items={fetch_items} SETproperties={SETproperties} properties={properties} />
-                <ItemsContainer is_loading={is_loading} items={items} append_items={append_items} properties={properties} />
-            </div>
-        </Window1Context.Provider>
-    );
+                    }, style: G.active_window === 2 ? { transform: " translatex(90%)", zIndex: "99999" } : { zIndex: "99999" }, children: G.active_window === 1 ? ">" : "<" }), _jsx(SearchItem, { fetch_items: fetch_items, SETproperties: SETproperties, properties: properties }), _jsx(Items_Properties_Chooser_Menu, { fetch_items: fetch_items, SETproperties: SETproperties, properties: properties }), _jsx(ItemsContainer, { is_loading: is_loading, items: items, append_items: append_items, properties: properties })] }) }));
 };

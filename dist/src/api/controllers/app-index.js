@@ -3,7 +3,7 @@ import Return405 from "../middlewares/Return405";
 //--------------/
 export default {
     get: (req, res) => {
-        res.status(200).sendFile(StaticDir + "html\\index.html");
+        return res.status(200).sendFile(StaticDir + "html/index.html");
     },
     all: Return405,
 };

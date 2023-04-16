@@ -442,7 +442,7 @@ export const Charts_Window: FunctionComponent = () => {
                             </div> */}
                         </>
                     )}
-                    <div id="basic_item_properties_container">
+                    {/* <div id="basic_item_properties_container">
                         {(() => {
                             if (G.chart_items.length === 0) {
                                 return (
@@ -521,7 +521,7 @@ export const Charts_Window: FunctionComponent = () => {
                                 </>
                             );
                         })()}
-                    </div>
+                    </div> */}
                 </div>
                 <div id="handle_chart_datasets">
                     {Object.entries(markets_locations).map(([market_name, market_props]) => {

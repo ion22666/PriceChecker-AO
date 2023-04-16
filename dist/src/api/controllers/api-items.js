@@ -1,22 +1,13 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import DB from "../config/mongodb";
-import { ExtendItem } from "../models/item";
-const shema = (lang) => {
-    return {
-        _id: 0,
-        [`LocalizedNames.${lang}`]: 1,
-        [`LocalizedDescriptions.${lang}`]: 1,
-        UniqueName: 1,
-    };
-};
+import { available_category, available_sub_category, avalaible_sorts } from "./constants";
+// const shema = (lang: string) => {
+//     return {
+//         _id: 0,
+//         [`LocalizedNames.${lang}`]: 1,
+//         [`LocalizedDescriptions.${lang}`]: 1,
+//         UniqueName: 1,
+//     };
+// };
 // {
 //     UniqueName: "UNIQUE_HIDEOUT";
 // }
@@ -36,84 +27,159 @@ const shema = (lang) => {
 //     "ID-ID": "Kit Konstruksi Persembunyian",
 // };
 //--------------/api/items
-export default {
-    getIndex: (req, res) => {
-        res.status(200).json({
-            message: "Albion Online Items API",
-            content: {
-                "Search Item": "/api/items/<unique_name || localized_name>",
-                Sources: [
-                    "https://raw.githubusercontent.com/broderickhyman/ao-bin-dumps/master/formatted/items.json",
-                    "https://raw.githubusercontent.com/broderickhyman/ao-bin-dumps/master/items.json",
-                ],
-            },
-        });
-    },
-    get_one: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        let localized_item = ExtendItem(yield DB.collections.itemsArray.findOne({
-            $or: [{ UniqueName: req.params.name }, { [`LocalizedNames.${req.params.lang}`]: req.params.name }],
-        }, {
-            projection: shema(res.locals.lang),
-        }));
-        if (localized_item) {
-            res.status(200).json({ status: "OK", data: Object.assign(Object.assign({}, localized_item), { img_url: localized_item.get_img_url() }) });
-        }
-        else {
-            res.status(404).json({ status: "ERROR", error: "Item Not Found" });
-        }
-    }),
-    get_many: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const get_one = async (req, res) => {
+    let item = await DB.collections.itemsArray.findOne({
+        $or: [{ UniqueName: req.params.name }, { [`LocalizedNames.${req.params.lang}`]: req.params.name }, { "@uniquename": req.params.name }],
+    });
+    if (item) {
+        res.status(200).json({ status: "OK", data: item });
+    }
+    else {
+        res.status(404).json({ status: "ERROR", error: "Item Not Found" });
+    }
+};
+export const get_variants = async (req, res) => {
+    let raw_name = req.params["unique_name"].slice(2, req.params["unique_name"][req.params["unique_name"].length - 2] === "@" ? req.params["unique_name"].length - 2 : req.params["unique_name"].length);
+    let response_obj = { tier: [], enchant: [], quality: [] };
+    if (!raw_name)
+        return res.status(200).json(response_obj);
+    let regex = new RegExp(`(^T\\d{1})?${raw_name}(@\\d{1})?$`);
+    let items = await DB.collections.itemsArray.find({ UniqueName: regex }).project({ _id: 0, UniqueName: 1, "@tier": 1, "@enchantmentlevel": 1, "@maxqualitylevel": 1 }).toArray();
+    if (!items.length) {
+        return response_obj;
+    }
+    if (items[0]["@maxqualitylevel"]) {
+        response_obj.quality.push(...Array.from({ length: parseInt(items[0]["@maxqualitylevel"]) + 1 }, (_, i) => `${i}`));
+    }
+    else {
+        response_obj.quality.push("1");
+    }
+    items.forEach(item => {
+        const [, tier = "0", , enchant = "0"] = /^T(\d)_.+?(@(\d))?$/.exec(item.UniqueName) || [0, item["@tier"] ? item["@tier"] : "0", 0, "0"];
+        if (!response_obj.tier.find(v => v === tier) && tier !== "0")
+            response_obj.tier.push(tier);
+        if (!response_obj.enchant.find(v => v === enchant))
+            response_obj.enchant.push(enchant);
+    });
+    response_obj.tier.sort();
+    response_obj.enchant.sort();
+    response_obj.quality.sort();
+    return res.status(200).json(response_obj);
+};
+function check_param(name, value, default_value, default_mirror_values, values, int_range) {
+    if (!value) {
+        return default_value;
+    }
+    if (default_mirror_values && default_mirror_values.includes(value)) {
+        return default_value;
+    }
+    if (values && !values.includes(value))
+        throw new Error(name + " is not acceptable");
+    if (int_range) {
         try {
-            let count = parseInt(req.params.count);
-            let page = parseInt(req.params.page);
-            let category = req.params.categoty || "*";
-            let sub_category = req.params.sub_categoty || "*";
-            let database = req.query.database || "1";
-            // Parameters validators
+            let int_value = parseInt(value);
+            if (int_value < int_range[0])
+                throw new Error(name + " is too small, needs to be in range: " + int_range[0] + "-" + int_range[1]);
+            if (int_value > int_range[1])
+                throw new Error(name + " is too large, needs to be in range: " + int_range[0] + "-" + int_range[1]);
+        }
+        catch (e) {
+            throw new Error(name + " needs to be a number");
+        }
+    }
+    return value;
+}
+export const param_validator = (req, res, next) => {
+    let q = req.query;
+    try {
+        // Individual Checks
+        q.count = check_param("Count", q.count?.toString(), "10", null, null, [1, 50]);
+        q.page = check_param("Page", q.page?.toString(), "0", null, null, [0, 100]);
+        q.enchant = check_param("Enchantent", q["@enchantmentlevel"]?.toString(), "*", ["all", "any"], null, [0, 4]);
+        q.tier = check_param("Tier", q.tier?.toString(), "*", ["all", "any"], null, [0, 8]);
+        q.quality = check_param("Quality", q.quality?.toString(), "1", ["all", "any"], null, [1, 5]);
+        q.sort = check_param("Sort", q.sort?.toString(), "Index", ["all", "any"], avalaible_sorts, null);
+        q.search = check_param("Search", q.search?.toString(), "", null, null, null);
+        let category = (q.category = check_param("Category", q.category?.toString(), "*", ["all", "any"], available_category, null));
+        let sub_category = (q.sub_category = check_param("Sub-Category", q.sub_category?.toString(), "*", ["all", "any"], available_sub_category[category], null));
+        let database = (q.database = check_param("Database", q.database?.toString(), "1", null, null, [1, 2]));
+        // Group Checks
+        if (sub_category != "*" && category == "*")
+            throw new Error("Sub-Category cannot exist without Category");
+        if (database == "2" && (category == "*" || sub_category == "*"))
+            throw new Error("The all/any method is only available with database=1");
+    }
+    catch (err) {
+        return res.status(400).json({ status: "ERROR", reason: err.message });
+    }
+    next();
+};
+export const get_many = async (req, res) => {
+    let q = req.query;
+    console.log(q);
+    let items = [];
+    // Read from items-array collection
+    if (q.database == "1") {
+        let filter = {};
+        let AddFilter = (property, value, defaul_value, default_filter) => {
+            if (value != defaul_value) {
+                filter[property] = value;
+            }
+            else if (default_filter) {
+                filter[property] = default_filter;
+            }
+        };
+        // property to filter | value to filter | if value to filter == default value => use default filter if exists
+        AddFilter("@showinmarketplace", "*", "*", { $in: ["true", undefined] });
+        AddFilter("@shopcategory", q.category?.toString(), "*", null);
+        AddFilter("@shopsubcategory1", q.sub_category?.toString(), "*", null);
+        AddFilter("@enchantmentlevel", q.enchant?.toString(), "*", null);
+        AddFilter("@tier", q.tier?.toString(), "*", null);
+        let reg_exp = new RegExp(q.search.toString(), "ig");
+        // AddFilter("UniqueName", { $regex: reg_exp }, "", null);
+        // AddFilter("@uniquename", { $regex: reg_exp }, "", null);
+        // AddFilter(`LocalizedNames.${q.lang!.toString()}` as "LocalizedNames", { $regex: reg_exp }, "", null);
+        // if (q.category == "mountskin") {
+        //     AddFilter("@shopcategory", "*", "*", { $exists: 0 });
+        // }
+        if (q.tier?.toString() == "0") {
+            AddFilter("@tier", "*", "*", { $in: ["0", undefined] });
+        }
+        if (q.quality?.toString() != "1") {
+            AddFilter("@maxqualitylevel", "*", "*", { $exists: 1 });
+        }
+        items = (await DB.collections.itemsArray
+            .aggregate([
+            { $match: filter },
             {
-                if (count && (count > 100 || count < 0)) {
-                    throw new Error("Items counts is not valid");
-                }
-                if (page && page < 0) {
-                    throw new Error("Page number is not valid");
-                }
-                // if (category && !available_category.includes(category) && category != "*") {
-                //     throw new Error("Category Not Valid");
-                // }
-                // if (sub_category && !available_sub_category[category].includes(category) && sub_category != "*") {
-                //     throw new Error("Sub-Category Not Valid");
-                // }
-            }
-            let items;
-            if (database === "1") {
-                items = (yield DB.collections.itemsArray
-                    .find({ "@shopcategory": "melee", "@shopsubcategory1": "axe" })
-                    .limit(10)
-                    //.project(shema(res.locals.lang))
-                    .toArray());
-            }
-            else if (database === "2") {
-                items = yield DB.collections.itemsTree
-                    .aggregate([
-                    {
-                        $project: {
-                            "melee.axe": { $slice: ["$melee.axe", 10] },
-                        },
-                    },
-                ])
-                    .toArray();
-                items = items[0]["melee"]["axe"];
-            }
-            else {
-                throw new Error("Database not valid , available obtions : 1,2");
-            }
-            if (items.length === 0) {
-                throw new Error("No Items Found");
-            }
-            return res.status(200).json({ status: "OK", data: items });
-        }
-        catch (err) {
-            return res.status(400).json({ status: "ERROR", error: err.message });
-        }
-    }),
+                $match: {
+                    $or: [{ UniqueName: reg_exp }, { "@uniquename": reg_exp }, { [`LocalizedNames.${q.lang.toString()}`]: reg_exp }],
+                },
+            },
+        ])
+            .sort({ [q.sort.toString()]: 1 })
+            .skip(parseInt(q.page.toString()) * parseInt(q.count.toString()))
+            .limit(parseInt(q.count.toString()))
+            .toArray());
+        // Read from items-tree collection
+    }
+    else {
+        // items = (
+        //     await DB.collections.itemsTree
+        //         .aggregate([
+        //             {
+        //                 $project: {
+        //                     [`${q.category?.toString()}.${q.sub_category?.toString()}`]: { $slice: [`$${q.category?.toString()}.${sub_category}`, page * count, page * count + count] },
+        //                 },
+        //             },
+        //         ])
+        //         .toArray()
+        // )[0][q.category as string][q.sub_category as string] as Document[];
+    }
+    if (items.length === 0) {
+        return res.status(404).json({ status: "ERROR", reason: "No Items Found" });
+    }
+    else {
+        return res.status(200).json({ status: "OK", data: items });
+    }
 };

@@ -1,5 +1,5 @@
 const config = {
     port: 3000,
-    mode: "development",
+    mode: process.env.PROD ? "production" : "development",
 };
 export default config;

@@ -20,12 +20,14 @@
   gap: 2vmin;
 }
 #market_window #go_to_charts {
-  height: 4vmin;
-  width: 4vmin;
   position: absolute;
-  background-color: white;
+  background-color: rgba(0, 0, 0, 0.75);
   left: 100%;
   top: calc(50% - 2vmin);
+  color: red;
+  border-radius: 0.2rem;
+  padding: 0.1rem;
+  cursor: pointer;
 }
 #market_window #SearchItem {
   padding: 1vmin;
